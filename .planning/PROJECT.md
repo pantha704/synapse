@@ -4,6 +4,12 @@
 
 MindMapClass is a multi-tenant academic progress platform that combines Google Classroom's teacher/student role management with NotebookLM's interactive mindmap visualization. Teachers create batches, upload curriculum resources, and track progress on a pannable/zoomable mindmap canvas. Students see their class progress as a game-like skill tree — topics completed, in-progress, and upcoming — and interact with course materials through an AI-powered chat assistant. Built as a web app for hackathon judging, designed for any school or university.
 
+**Key Documents:**
+- [Requirements](file:///home/panther/Desktop/projects/mindmapclass/.planning/REQUIREMENTS.md)
+- [Roadmap](file:///home/panther/Desktop/projects/mindmapclass/.planning/ROADMAP.md)
+- [Research Summary](file:///home/panther/Desktop/projects/mindmapclass/.planning/research/SUMMARY.md)
+
+
 ## Core Value
 
 Students and teachers see the entire course journey as a living, interactive mindmap — making academic progress tangible, visual, and engaging like leveling up in a game.
