@@ -1,0 +1,218 @@
+// Synapse — Multi-Tenant EdTech LMS
+// All models reference institution_id for tenant isolation
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── Multi-Tenancy Root ────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  TEACHER
+  STUDENT
+}
+
+model Institution {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  logoUrl   String?  @map("logo_url")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  users    User[]
+  batches  Batch[]
+  subjects Subject[]
+
+  @@map("institutions")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  supabaseId    String   @unique @map("supabase_id")
+  email         String
+  name          String?
+  avatarUrl     String?  @map("avatar_url")
+  role          Role     @default(STUDENT)
+  institutionId String   @map("institution_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  institution Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+
+  // Teacher relations
+  taughtBatches  Batch[]  @relation("BatchTeacher")
+
+  // Student relations
+  enrolledBatches   BatchStudent[]
+  studentProgress   StudentProgress[]
+  engagementEvents  EngagementEvent[]
+
+  @@index([institutionId])
+  @@index([supabaseId])
+  @@map("users")
+}
+
+// ─── Academic Structure ────────────────────────────────────────
+
+model Batch {
+  id            String   @id @default(cuid())
+  name          String
+  joinCode      String   @unique @map("join_code") // 6-char code for students
+  institutionId String   @map("institution_id")
+  teacherId     String   @map("teacher_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  institution Institution    @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  teacher     User           @relation("BatchTeacher", fields: [teacherId], references: [id])
+  students    BatchStudent[]
+  subjects    BatchSubject[]
+
+  @@index([institutionId])
+  @@index([joinCode])
+  @@map("batches")
+}
+
+model BatchStudent {
+  id        String   @id @default(cuid())
+  batchId   String   @map("batch_id")
+  studentId String   @map("student_id")
+  joinedAt  DateTime @default(now()) @map("joined_at")
+
+  batch   Batch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  student User  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([batchId, studentId])
+  @@map("batch_students")
+}
+
+model Subject {
+  id            String   @id @default(cuid())
+  name          String
+  description   String?
+  iconEmoji     String?  @map("icon_emoji")
+  institutionId String   @map("institution_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  institution Institution    @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  batches     BatchSubject[]
+  topicNodes  TopicNode[]
+  resources   Resource[]
+
+  @@index([institutionId])
+  @@map("subjects")
+}
+
+model BatchSubject {
+  id        String @id @default(cuid())
+  batchId   String @map("batch_id")
+  subjectId String @map("subject_id")
+
+  batch   Batch   @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([batchId, subjectId])
+  @@map("batch_subjects")
+}
+
+// ─── Mindmap & Content ─────────────────────────────────────────
+
+model TopicNode {
+  id          String  @id @default(cuid())
+  title       String
+  description String?
+  order       Int     @default(0)
+  subjectId   String  @map("subject_id")
+  parentId    String? @map("parent_id")
+
+  subject  Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  parent   TopicNode?  @relation("TopicTree", fields: [parentId], references: [id])
+  children TopicNode[] @relation("TopicTree")
+
+  resources       Resource[]
+  studentProgress StudentProgress[]
+
+  @@index([subjectId])
+  @@index([parentId])
+  @@map("topic_nodes")
+}
+
+model Resource {
+  id        String       @id @default(cuid())
+  title     String
+  type      ResourceType
+  url       String?
+  content   String?      // For text-based resources / announcements
+  subjectId String       @map("subject_id")
+  topicId   String?      @map("topic_id")
+  createdAt DateTime     @default(now()) @map("created_at")
+
+  subject Subject    @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  topic   TopicNode? @relation(fields: [topicId], references: [id])
+
+  @@index([subjectId])
+  @@map("resources")
+}
+
+enum ResourceType {
+  PDF
+  VIDEO
+  LINK
+  NOTE
+  ANNOUNCEMENT
+}
+
+// ─── Progress & Engagement ─────────────────────────────────────
+
+enum ProgressStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+model StudentProgress {
+  id        String         @id @default(cuid())
+  studentId String         @map("student_id")
+  topicId   String         @map("topic_id")
+  status    ProgressStatus @default(NOT_STARTED)
+  updatedAt DateTime       @updatedAt @map("updated_at")
+
+  student User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  topic   TopicNode @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, topicId])
+  @@index([studentId])
+  @@map("student_progress")
+}
+
+enum EventType {
+  LOGIN
+  PAGE_VIEW
+  RESOURCE_VIEW
+  AI_CHAT
+  TOPIC_COMPLETE
+}
+
+model EngagementEvent {
+  id        String    @id @default(cuid())
+  studentId String    @map("student_id")
+  type      EventType
+  metadata  Json?     // Flexible payload (page path, resource id, etc.)
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  student User @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+  @@index([createdAt])
+  @@map("engagement_events")
+}
