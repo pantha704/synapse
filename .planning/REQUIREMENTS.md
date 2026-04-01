@@ -110,3 +110,4 @@
 ### 5.3 Scalability & Usability
 *   **Responsive:** Mindmap canvas must support touch/pan/zoom on tablets.
 *   **Hackathon Demo-Ready:** System must start instantly with comprehensive pre-seeded dummy data for judging purposes.
+*   **UI/UX Aesthetic:** Minimal, not overly complex, highly navigable, and **super snappy/smooth**. Using robust libraries like Framer Motion to ensure butter-smooth transitions between states.
