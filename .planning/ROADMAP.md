@@ -14,12 +14,17 @@ This roadmap defines the sequential phases for building MindMapClass, ensuring f
 - Create role-based dashboard scaffolding (Admin vs Teacher vs Student views).
 - Implement authentication flows and secure join codes.
 
-### Phase 2: The Interactive Mindmap Canvas
-- Integrate `React Flow` into the Subject detail view.
-- Create custom React Flow nodes (ChapterNode, TopicNode) representing academic progress.
-- Implement canvas persistence (save/load node coordinates).
-- Teacher capability: Create nodes, link edges, defined sequence.
-- Student capability: View-only panning/zooming over the curriculum.
+### Phase 2: The Interactive Mindmap Canvas ✅ COMPLETE
+- ~~Integrate `React Flow` into the Subject detail view.~~
+- ~~Create custom React Flow nodes (ChapterNode, TopicNode) representing academic progress.~~
+- ~~Implement canvas persistence (save/load node coordinates).~~
+- ~~Teacher capability: Create nodes, link edges, defined sequence.~~
+- ~~Student capability: View-only panning/zooming over the curriculum.~~
+- **Pivot:** Replaced React Flow mindmap with Candy Crush-style game path (S-curved glowing path with nodes)
+- Created LearningPath component with animated nodes (completed/in-progress/locked states)
+- Built SideNavBar, TopNavBar layout components
+- Implemented StatsPanel with batch pulse, critical nodes, engagement nebula
+- Generated 3 UI direction variants in Stitch, selected dark game-path design
 
 ### Phase 3: Content & Progress Tracking
 - Implement Supabase Storage (S3) for resource uploads attached to specific TopicNodes.
