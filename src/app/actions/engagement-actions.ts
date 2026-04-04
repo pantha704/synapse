@@ -15,7 +15,7 @@ export async function logEngagementEvent(
     data: {
       studentId,
       type,
-      metadata: metadata ? JSON.stringify(metadata) : null
+      metadata: metadata ? JSON.stringify(metadata) : undefined
     }
   });
 
@@ -26,7 +26,7 @@ export async function logEngagementEvent(
 
 export type EngagementStatus = 'progressing' | 'stuck' | 'inactive';
 
-interface StudentEngagement {
+export interface StudentEngagement {
   studentId: string;
   studentName: string | null;
   email: string;

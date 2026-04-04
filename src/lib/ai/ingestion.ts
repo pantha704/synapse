@@ -1,4 +1,4 @@
-import pdfParse from "pdf-parse";
+import * as pdfParse from "pdf-parse";
 import { createEmbeddings } from "./embeddings";
 import { prisma } from "@/lib/prisma";
 
@@ -42,7 +42,7 @@ function chunkText(text: string): string[] {
 }
 
 export async function extractPdfText(buffer: Buffer): Promise<{ text: string; pages: number }> {
-  const result = await pdfParse(buffer);
+  const result = await (pdfParse as unknown as (buf: Buffer) => Promise<{text: string; numpages: number}>)(buffer);
   return { text: result.text, pages: result.numpages };
 }
 

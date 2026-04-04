@@ -1,5 +1,6 @@
 "use client";
 
+export const dynamic = "force-dynamic";
 import { SideNavBar } from "@/components/layout/SideNavBar";
 import { TopNavBar } from "@/components/layout/TopNavBar";
 import { AcademicLearningPath } from "@/components/path/AcademicLearningPath";

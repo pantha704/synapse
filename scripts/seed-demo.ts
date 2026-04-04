@@ -101,8 +101,8 @@ async function seed() {
   // Clean existing demo data
   console.log("🧹 Cleaning existing demo data...");
   await prisma.engagementEvent.deleteMany({ where: { student: { institution: { slug: DEMO_INSTITUTION.slug } } } });
-  await prisma.aiMessage.deleteMany({ where: { session: { subject: { institution: { slug: DEMO_INSTITUTION.slug } } } } });
-  await prisma.aiSession.deleteMany({ where: { subject: { institution: { slug: DEMO_INSTITUTION.slug } } } });
+  await prisma.aIMessage.deleteMany({ where: { session: { subject: { institution: { slug: DEMO_INSTITUTION.slug } } } } });
+  await prisma.aISession.deleteMany({ where: { subject: { institution: { slug: DEMO_INSTITUTION.slug } } } });
   await prisma.studentResourceProgress.deleteMany({ where: { student: { institution: { slug: DEMO_INSTITUTION.slug } } } });
   await prisma.studentProgress.deleteMany({ where: { student: { institution: { slug: DEMO_INSTITUTION.slug } } } });
   await prisma.documentChunk.deleteMany({ where: { subject: { institution: { slug: DEMO_INSTITUTION.slug } } } });

@@ -22,7 +22,6 @@ export async function createEmbedding(text: string): Promise<EmbeddingResult> {
     model: EMBEDDING_MODEL,
     input: text,
     encoding_format: "float",
-    dimensions: 1024,
   });
 
   const data = response.data[0];

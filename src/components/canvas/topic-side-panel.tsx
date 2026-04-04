@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Loader2, Upload, File, Video, Link as LinkIcon, Download } from 'lucide-react';
-import { uploadResourceFile } from '@/lib/storage';
+import { uploadResource as uploadResourceToStorage, BUCKET_NAME } from '@/lib/storage';
 import { toast } from 'sonner';
 import { Resource } from '@prisma/client';
 
@@ -59,7 +59,7 @@ export function TopicSidePanel({
     setIsUploading(true);
 
     try {
-      const { url } = await uploadResourceFile(file, topicId);
+      const { url } = await uploadResourceToStorage(file, topicId, "demo-university");
       
       const fileType = file.type.includes('pdf') ? 'PDF' : file.type.includes('video') ? 'VIDEO' : 'LINK';
       

@@ -19,12 +19,12 @@ export async function chatWithSubject(
   userMessage: string
 ) {
   // Get or create session
-  let session = await prisma.aiSession.findUnique({
+  let session = await prisma.aISession.findUnique({
     where: { studentId_subjectId: { studentId: supabaseUserId, subjectId } }
   });
 
   if (!session) {
-    session = await prisma.aiSession.create({
+    session = await prisma.aISession.create({
       data: {
         studentId: supabaseUserId,
         subjectId,
@@ -43,7 +43,7 @@ export async function chatWithSubject(
   const rag = await buildRAGContext(subjectId, userMessage);
 
   // Get recent message history
-  const recentMessages = await prisma.aiMessage.findMany({
+  const recentMessages = await prisma.aIMessage.findMany({
     where: { sessionId: session.id },
     orderBy: { createdAt: 'desc' },
     take: MAX_HISTORY
@@ -58,9 +58,9 @@ Keep responses concise and educational. Cite sources when using specific informa
 Context from course materials:
 ${rag.formattedContext || 'No relevant context found.'}`;
 
-  const messages: Array<{ role: string; content: string }> = [
+  const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
     { role: 'system', content: systemPrompt },
-    ...recentMessages.reverse().map(m => ({ role: m.role, content: m.content })),
+    ...recentMessages.reverse().map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })) as Array<{ role: 'user' | 'assistant'; content: string }>,
     { role: 'user', content: userMessage }
   ];
 
@@ -76,7 +76,7 @@ ${rag.formattedContext || 'No relevant context found.'}`;
   const assistantMessage = response.choices[0]?.message?.content || "I couldn't generate a response. Please try again.";
 
   // Save messages to database
-  await prisma.aiMessage.create({
+  await prisma.aIMessage.create({
     data: {
       sessionId: session.id,
       role: 'user',
@@ -84,7 +84,7 @@ ${rag.formattedContext || 'No relevant context found.'}`;
     }
   });
 
-  await prisma.aiMessage.create({
+  await prisma.aIMessage.create({
     data: {
       sessionId: session.id,
       role: 'assistant',
@@ -92,12 +92,12 @@ ${rag.formattedContext || 'No relevant context found.'}`;
       sources: rag.chunks.length > 0 ? JSON.stringify(rag.chunks.map(c => ({
         content: c.content.substring(0, 200),
         score: c.score
-      }))) : null
+      }))) : undefined
     }
   });
 
   // Clean up expired sessions
-  await prisma.aiSession.deleteMany({
+  await prisma.aISession.deleteMany({
     where: { expiresAt: { lt: new Date() } }
   });
 
@@ -115,7 +115,7 @@ export async function getSessionHistory(
   supabaseUserId: string,
   subjectId: string
 ) {
-  const session = await prisma.aiSession.findUnique({
+  const session = await prisma.aISession.findUnique({
     where: { studentId_subjectId: { studentId: supabaseUserId, subjectId } },
     include: {
       messages: {
