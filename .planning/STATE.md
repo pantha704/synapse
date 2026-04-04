@@ -33,8 +33,9 @@ progress:
 - PeerComparisonPanel ready for real DB data binding
 - Schema pushed, Prisma regenerated
 
-## Next: Phase 4 — AI Context & RAG Pipeline Setup
+## Upcoming
+
+### Phase 4 — AI Context & RAG Pipeline Setup
 - Document ingestion pipeline (PDF parsing, text chunking)
-- pgvector configuration
-- Embedding model integration
+- pgvector configuration, embedding model integration
 - Subject-scoped vector similarity search
