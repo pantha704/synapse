@@ -16,11 +16,14 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
-import { TopicNode } from './topic-node';
+import { TopicNode, TopicNodeData } from './topic-node';
 import { ChapterNode } from './chapter-node';
 import { Button } from '@/components/ui/button';
 import { Save, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+
+type CustomNodeData = TopicNodeData | { title?: string };
+type CustomNode = Node<CustomNodeData>;
 
 const nodeTypes: NodeTypes = {
   topic: TopicNode,
@@ -78,12 +81,12 @@ export function MindmapCanvas({
   };
 
   const handleNodeClick = useCallback(
-    (_: React.MouseEvent, node: Node) => {
-      // Don't open side panel if it's a chapter node
+    (_: React.MouseEvent, node: CustomNode) => {
       if (node.type === 'chapter') return;
-      
+
       if (onNodeSelect) {
-        onNodeSelect(node.id, (node.data as any).title || 'Unknown Topic');
+        const title = 'title' in node.data ? node.data.title : undefined;
+        onNodeSelect(node.id, title || 'Unknown Topic');
       }
     },
     [onNodeSelect]

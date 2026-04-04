@@ -1,14 +1,13 @@
 "use client";
 
-export const dynamic = "force-dynamic";
 import { useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Brain, ArrowRight, Loader2 } from "lucide-react";
+import { Brain, ArrowRight, Loader2, Eye, EyeOff } from "lucide-react";
 import { syncUserAction } from "@/app/actions/auth-actions";
 
 type AuthMode = "login" | "signup";
@@ -21,6 +20,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [joinCode, setJoinCode] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -37,6 +37,7 @@ export default function LoginPage() {
           email,
           password,
           options: {
+            emailRedirectTo: `${window.location.origin}/`,
             data: {
               name,
               role: role.toUpperCase(),
@@ -114,45 +115,56 @@ export default function LoginPage() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Role Selector (signup only) */}
-              {mode === "signup" && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  className="flex gap-2"
-                >
-                  {(["student", "teacher"] as const).map((r) => (
-                    <button
-                      key={r}
-                      type="button"
-                      onClick={() => setRole(r)}
-                      className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                        role === r
-                          ? "bg-violet-500/20 text-violet-300 border border-violet-500/30"
-                          : "bg-white/[0.04] text-white/40 border border-white/[0.06] hover:bg-white/[0.08]"
-                      }`}
-                    >
-                      {r === "student" ? "🎓 Student" : "👨‍🏫 Teacher"}
-                    </button>
-                  ))}
-                </motion.div>
-              )}
+              <AnimatePresence initial={false}>
+                {mode === "signup" && (
+                  <motion.div
+                    key="role-selector"
+                    initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                    animate={{ opacity: 1, height: "auto", marginBottom: 16 }}
+                    exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                    transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
+                    className="flex gap-2 overflow-hidden"
+                  >
+                    {(["student", "teacher"] as const).map((r) => (
+                      <button
+                        key={r}
+                        type="button"
+                        onClick={() => setRole(r)}
+                        className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                          role === r
+                            ? "bg-violet-500/20 text-violet-300 border border-violet-500/30"
+                            : "bg-white/[0.04] text-white/40 border border-white/[0.06] hover:bg-white/[0.08]"
+                        }`}
+                      >
+                        {r === "student" ? "🎓 Student" : "👨‍🏫 Teacher"}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Name (signup only) */}
-              {mode === "signup" && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                >
-                  <Input
-                    type="text"
-                    placeholder="Full name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                    className="bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/30 h-11"
-                  />
-                </motion.div>
-              )}
+              <AnimatePresence initial={false}>
+                {mode === "signup" && (
+                  <motion.div
+                    key="name-field"
+                    initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                    animate={{ opacity: 1, height: "auto", marginBottom: 16 }}
+                    exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                    transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
+                    className="overflow-hidden"
+                  >
+                    <Input
+                      type="text"
+                      placeholder="Full name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                      className="bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/30 h-11"
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               <Input
                 type="email"
@@ -163,33 +175,48 @@ export default function LoginPage() {
                 className="bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/30 h-11"
               />
 
-              <Input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                className="bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/30 h-11"
-              />
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/30 h-11 pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/60 transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
 
               {/* Join Code (student signup only) */}
-              {mode === "signup" && role === "student" && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                >
-                  <Input
-                    type="text"
-                    placeholder="Class join code (e.g., ABC123)"
-                    value={joinCode}
-                    onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                    required
-                    maxLength={6}
-                    className="bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/30 h-11 uppercase tracking-widest text-center font-mono"
-                  />
-                </motion.div>
-              )}
+              <AnimatePresence initial={false}>
+                {mode === "signup" && role === "student" && (
+                  <motion.div
+                    key="join-code"
+                    initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                    animate={{ opacity: 1, height: "auto", marginBottom: 16 }}
+                    exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                    transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
+                    className="overflow-hidden"
+                  >
+                    <Input
+                      type="text"
+                      placeholder="Class join code (e.g., ABC123)"
+                      value={joinCode}
+                      onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                      required
+                      maxLength={6}
+                      className="bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/30 h-11 uppercase tracking-widest text-center font-mono"
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {error && (
                 <motion.p

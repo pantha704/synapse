@@ -1,61 +1,249 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { ProgressStatus } from '@prisma/client';
+import { Role, ProgressStatus } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
+import { createClient } from '@/utils/supabase/server';
 
-// ─── Teacher: Assign class-wide progress ─────────────────────────
+/**
+ * Get current authenticated user with role check
+ */
+async function getAuthenticatedUser() {
+  const supabase = await createClient();
+  const { data: { user }, error } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    throw new Error('Unauthorized: No authenticated user');
+  }
+
+  return user;
+}
+
+/**
+ * Verify user is a teacher and owns the specified batch
+ */
+async function verifyTeacherOwnsBatch(batchId: string, teacherId: string) {
+  const batch = await prisma.batch.findUnique({
+    where: { id: batchId },
+    select: { id: true, teacherId: true }
+  });
+
+  if (!batch) {
+    throw new Error('Batch not found');
+  }
+
+  if (batch.teacherId !== teacherId) {
+    throw new Error('Unauthorized: You do not teach this batch');
+  }
+
+  return batch;
+}
+
+// ─── Auth Sync ──────────────────────────────────────────
+
+export async function syncUserAction(
+  supabaseId: string,
+  email: string,
+  name: string | null,
+  role: Role,
+  joinCode?: string
+) {
+  const user = await getAuthenticatedUser();
+
+  // Verify the user is syncing their own data
+  if (user.id !== supabaseId) {
+    throw new Error('Unauthorized: Cannot sync data for another user');
+  }
+
+  // Validate inputs
+  if (!email || typeof email !== 'string') {
+    throw new Error('Invalid email');
+  }
+
+  if (role !== 'STUDENT' && role !== 'TEACHER' && role !== 'ADMIN') {
+    throw new Error('Invalid role');
+  }
+
+  try {
+    let existingUser = await prisma.user.findUnique({
+      where: { supabaseId }
+    });
+
+    if (existingUser) {
+      return existingUser;
+    }
+
+    let institution = await prisma.institution.findFirst({
+      select: { id: true }
+    });
+
+    if (!institution) {
+      institution = await prisma.institution.create({
+        data: {
+          name: 'Demo Institution',
+          slug: 'demo-inst'
+        },
+        select: { id: true }
+      });
+    }
+
+    const newUser = await prisma.user.create({
+      data: {
+        supabaseId,
+        email,
+        name,
+        role,
+        institutionId: institution.id
+      }
+    });
+
+    if (role === 'STUDENT' && joinCode && joinCode.length === 6) {
+      const batch = await prisma.batch.findUnique({
+        where: { joinCode: joinCode.toUpperCase() },
+        select: { id: true }
+      });
+
+      if (batch) {
+        await prisma.batchStudent.create({
+          data: {
+            batchId: batch.id,
+            studentId: newUser.id
+          }
+        });
+      }
+    }
+
+    return newUser;
+  } catch (error) {
+    console.error('syncUserAction failed:', error);
+    throw new Error('Failed to sync user. Please try again.');
+  }
+}
+
+// ─── Teacher Progress ───────────────────────────────────
 
 export async function assignBatchTopicProgress(
   batchId: string,
   topicId: string,
-  status: ProgressStatus,
-  teacherId: string
+  status: ProgressStatus
 ) {
-  // Verify teacher owns this batch
-  const batch = await prisma.batch.findUnique({
-    where: { id: batchId },
-    include: { teacher: true }
+  const user = await getAuthenticatedUser();
+
+  const dbUser = await prisma.user.findUnique({
+    where: { supabaseId: user.id },
+    select: { id: true, role: true }
   });
 
-  if (!batch || batch.teacherId !== teacherId) {
-    throw new Error('Unauthorized: You do not teach this batch');
+  if (!dbUser || dbUser.role !== 'TEACHER') {
+    throw new Error('Unauthorized: Only teachers can assign progress');
   }
 
-  // Upsert teacher progress assignment
-  await prisma.teacherProgress.upsert({
-    where: { batchId_topicId: { batchId, topicId } },
-    update: { status, assignedAt: new Date() },
-    create: { batchId, topicId, status, assignedBy: teacherId }
+  await verifyTeacherOwnsBatch(batchId, dbUser.id);
+
+  // Validate topic exists
+  const topic = await prisma.topicNode.findUnique({
+    where: { id: topicId },
+    select: { id: true }
   });
 
-  revalidatePath(`/teacher/subjects/${topicId}`);
-  revalidatePath(`/teacher/learning-path`);
+  if (!topic) {
+    throw new Error('Topic not found');
+  }
+
+  // Validate status
+  if (!Object.values(ProgressStatus).includes(status)) {
+    throw new Error('Invalid progress status');
+  }
+
+  try {
+    await prisma.teacherProgress.upsert({
+      where: { batchId_topicId: { batchId, topicId } },
+      update: { status, assignedAt: new Date() },
+      create: { batchId, topicId, status, assignedBy: dbUser.id }
+    });
+
+    revalidatePath(`/teacher/subjects/${topicId}`);
+    revalidatePath(`/teacher/learning-path`);
+
+    return { success: true };
+  } catch (error) {
+    console.error('assignBatchTopicProgress failed:', error);
+    throw new Error('Failed to assign progress. Please try again.');
+  }
 }
 
-// ─── Student: Update personal progress ────────────────────────────
+// ─── Student Progress ───────────────────────────────────
 
 export async function updatePersonalProgress(
-  studentId: string,
   topicId: string,
   status: ProgressStatus
 ) {
-  await prisma.studentProgress.upsert({
-    where: { studentId_topicId: { studentId, topicId } },
-    update: { status, updatedAt: new Date() },
-    create: { studentId, topicId, status }
+  const user = await getAuthenticatedUser();
+
+  const dbUser = await prisma.user.findUnique({
+    where: { supabaseId: user.id },
+    select: { id: true, role: true }
   });
 
-  revalidatePath(`/student/learning-path`);
-  revalidatePath(`/student/subjects/${topicId}`);
+  if (!dbUser || dbUser.role !== 'STUDENT') {
+    throw new Error('Unauthorized: Only students can update personal progress');
+  }
+
+  // Validate topic exists
+  const topic = await prisma.topicNode.findUnique({
+    where: { id: topicId },
+    select: { id: true, subjectId: true }
+  });
+
+  if (!topic) {
+    throw new Error('Topic not found');
+  }
+
+  // Validate status
+  if (!Object.values(ProgressStatus).includes(status)) {
+    throw new Error('Invalid progress status');
+  }
+
+  try {
+    await prisma.studentProgress.upsert({
+      where: { studentId_topicId: { studentId: dbUser.id, topicId } },
+      update: { status, updatedAt: new Date() },
+      create: { studentId: dbUser.id, topicId, status }
+    });
+
+    revalidatePath(`/student/learning-path`);
+    revalidatePath(`/student/subjects/${topic.subjectId}`);
+
+    return { success: true };
+  } catch (error) {
+    console.error('updatePersonalProgress failed:', error);
+    throw new Error('Failed to update progress. Please try again.');
+  }
 }
 
-// ─── Data Fetching ────────────────────────────────────────────────
+// ─── Data Fetching ──────────────────────────────────────
 
-export async function getTopicProgress(topicId: string, studentId: string) {
+export async function getTopicProgress(topicId: string) {
+  const user = await getAuthenticatedUser();
+
+  const dbUser = await prisma.user.findUnique({
+    where: { supabaseId: user.id },
+    select: { id: true }
+  });
+
+  if (!dbUser) {
+    throw new Error('User not found in database');
+  }
+
   const [teacherProgress, personalProgress] = await Promise.all([
-    prisma.teacherProgress.findFirst({ where: { topicId } }),
-    prisma.studentProgress.findUnique({ where: { studentId_topicId: { studentId, topicId } } })
+    prisma.teacherProgress.findFirst({
+      where: { topicId },
+      select: { status: true }
+    }),
+    prisma.studentProgress.findUnique({
+      where: { studentId_topicId: { studentId: dbUser.id, topicId } },
+      select: { status: true, updatedAt: true }
+    })
   ]);
 
   return {
@@ -66,12 +254,43 @@ export async function getTopicProgress(topicId: string, studentId: string) {
 }
 
 export async function getClassRankings(batchId: string) {
+  const user = await getAuthenticatedUser();
+
+  // Verify user has access to this batch
+  const dbUser = await prisma.user.findUnique({
+    where: { supabaseId: user.id },
+    select: { id: true, role: true }
+  });
+
+  if (!dbUser) {
+    throw new Error('User not found');
+  }
+
+  // Teachers can view their batches, students can view batches they're in
+  const accessCheck = dbUser.role === 'TEACHER'
+    ? { id: batchId, teacherId: dbUser.id }
+    : { id: batchId, students: { some: { studentId: dbUser.id } } };
+
+  const batchExists = await prisma.batch.findFirst({
+    where: accessCheck,
+    select: { id: true }
+  });
+
+  if (!batchExists) {
+    throw new Error('Unauthorized: Cannot access this batch');
+  }
+
   const batchStudents = await prisma.batchStudent.findMany({
     where: { batchId },
-    include: {
+    select: {
       student: {
-        include: {
-          studentProgress: true
+        select: {
+          supabaseId: true,
+          name: true,
+          email: true,
+          studentProgress: {
+            select: { status: true }
+          }
         }
       }
     }
@@ -91,29 +310,6 @@ export async function getClassRankings(batchId: string) {
     };
   });
 
-  // Sort by progress descending and assign ranks
   rankings.sort((a, b) => b.progress - a.progress);
   return rankings.map((r, i) => ({ ...r, rank: i + 1 }));
-}
-
-export async function getStudentWeeklyActivity(studentId: string) {
-  const events = await prisma.engagementEvent.findMany({
-    where: { studentId },
-    orderBy: { createdAt: 'desc' },
-    take: 10
-  });
-
-  return events.map(e => ({
-    id: e.id,
-    type: e.type.toLowerCase(),
-    title: `${e.type.replace('_', ' ')} activity`,
-    time: formatTimeAgo(e.createdAt)
-  }));
-}
-
-function formatTimeAgo(date: Date): string {
-  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
-  return `${Math.floor(seconds / 86400)} days ago`;
 }

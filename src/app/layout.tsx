@@ -26,7 +26,7 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} h-full antialiased dark`}
     >
-      <body className="min-h-full flex flex-col bg-[hsl(220,20%,6%)] text-white">
+      <body className="min-h-full flex flex-col bg-[hsl(220,20%,6%)] text-white" suppressHydrationWarning>
         {children}
         <Toaster richColors position="bottom-right" />
       </body>

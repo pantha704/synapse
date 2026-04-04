@@ -39,7 +39,12 @@ export function StudentMindmapClient({
     return await fetchTopicResourcesAction(topicId);
   };
 
-  const handleUploadResource = async () => {
+  const handleUploadResource = async (
+    _topicId: string,
+    _title: string,
+    _type: 'PDF' | 'VIDEO' | 'LINK',
+    _url: string
+  ) => {
     throw new Error('Students cannot upload resources');
   };
 
@@ -72,7 +77,7 @@ export function StudentMindmapClient({
           onClose={() => setPanelState(prev => ({ ...prev, isOpen: false }))}
           readOnly={true}
           fetchResources={handleFetchResources}
-          uploadResource={handleUploadResource as any}
+          uploadResource={handleUploadResource}
           markResourceComplete={handleMarkComplete}
           completedResourceIds={completedResourceIds}
         />
