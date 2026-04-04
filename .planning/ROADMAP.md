@@ -20,11 +20,12 @@ This roadmap defines the sequential phases for building MindMapClass, ensuring f
 - ~~Implement canvas persistence (save/load node coordinates).~~
 - ~~Teacher capability: Create nodes, link edges, defined sequence.~~
 - ~~Student capability: View-only panning/zooming over the curriculum.~~
-- **Pivot:** Replaced React Flow mindmap with Candy Crush-style game path (S-curved glowing path with nodes)
-- Created LearningPath component with animated nodes (completed/in-progress/locked states)
-- Built SideNavBar, TopNavBar layout components
-- Implemented StatsPanel with batch pulse, critical nodes, engagement nebula
-- Generated 3 UI direction variants in Stitch, selected dark game-path design
+- **Pivot:** Replaced React Flow mindmap with Candy Crush-style game path
+- Generated 3 UI variants in Stitch, selected **Academic Light** design
+- Created AcademicLearningPath with dotted S-curve path and node cards
+- Built PeerComparisonPanel — students can compare performance with class rankings
+- Student dashboard: profile, weekly performance chart, activity feed, next milestone
+- Teacher dashboard: batch pulse, critical nodes, engagement nebula
 
 ### Phase 3: Content & Progress Tracking
 - Implement Supabase Storage (S3) for resource uploads attached to specific TopicNodes.
