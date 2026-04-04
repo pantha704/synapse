@@ -1,138 +1,117 @@
-"use client";
+import { notFound } from "next/navigation";
+import { prisma } from "@/lib/prisma";
+import StudentDashboardClient, { DashboardData, SubjectData } from "./student-dashboard-client";
+import { createClient } from "@/utils/supabase/server";
 
-import { motion } from "framer-motion";
-import { BookOpen, Target, Zap, ArrowRight, Circle } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+async function getDashboardData(): Promise<DashboardData> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-const fadeUp = {
-  initial: { opacity: 0, y: 16 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.4, ease: [0.23, 1, 0.32, 1] as [number, number, number, number] },
-};
+  if (!user) {
+    notFound();
+  }
 
-// Mock data — replaced with real DB data in Phase 2
-const MOCK_SUBJECTS = [
-  {
-    id: "1",
-    name: "Data Structures",
-    emoji: "🌲",
-    totalTopics: 12,
-    completedTopics: 7,
-    status: "progressing",
-  },
-  {
-    id: "2",
-    name: "Algorithms",
-    emoji: "⚡",
-    totalTopics: 10,
-    completedTopics: 2,
-    status: "stuck",
-  },
-  {
-    id: "3",
-    name: "Database Systems",
-    emoji: "🗃️",
-    totalTopics: 8,
-    completedTopics: 0,
-    status: "not_started",
-  },
-];
+  const student = await prisma.user.findUnique({
+    where: { supabaseId: user.id },
+    include: {
+      enrolledBatches: {
+        include: {
+          batch: {
+            include: {
+              subjects: {
+                include: {
+                  subject: {
+                    include: {
+                      _count: {
+                        select: { topicNodes: true }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      studentProgress: true,
+    }
+  });
 
-const STATUS_CONFIG = {
-  progressing: { label: "On track", color: "text-emerald-400", dot: "bg-emerald-400" },
-  stuck: { label: "Needs attention", color: "text-amber-400", dot: "bg-amber-400" },
-  not_started: { label: "Not started", color: "text-white/30", dot: "bg-white/20" },
-};
+  if (!student) {
+    notFound();
+  }
 
-export default function StudentDashboard() {
-  return (
-    <div className="max-w-3xl mx-auto space-y-8">
-      {/* Header */}
-      <motion.div {...fadeUp}>
-        <h1 className="text-2xl font-semibold text-white">Your learning map 🧠</h1>
-        <p className="text-white/40 mt-1 text-sm">
-          Track your progress across all subjects.
-        </p>
-      </motion.div>
+  // Flatten subjects from enrolled batches
+  const uniqueSubjectsMap = new Map();
 
-      {/* Quick Stats */}
-      <motion.div
-        className="grid grid-cols-3 gap-3"
-        initial="initial"
-        animate="animate"
-        variants={{ animate: { transition: { staggerChildren: 0.07 } } }}
-      >
-        {[
-          { icon: BookOpen, label: "Subjects", value: MOCK_SUBJECTS.length, color: "text-violet-400" },
-          { icon: Target, label: "Completed", value: "9 topics", color: "text-emerald-400" },
-          { icon: Zap, label: "Streak", value: "—", color: "text-amber-400" },
-        ].map((s) => (
-          <motion.div key={s.label} variants={fadeUp}>
-            <Card className="bg-[hsl(220,15%,10%)]/60 border-white/[0.06]">
-              <CardContent className="p-4 text-center">
-                <s.icon className={`w-5 h-5 mx-auto mb-2 ${s.color}`} />
-                <p className="text-lg font-semibold text-white">{s.value}</p>
-                <p className="text-[11px] text-white/35 mt-0.5">{s.label}</p>
-              </CardContent>
-            </Card>
-          </motion.div>
-        ))}
-      </motion.div>
+  student.enrolledBatches.forEach(eb => {
+    eb.batch.subjects.forEach(bs => {
+      const subj = bs.subject;
+      if (!uniqueSubjectsMap.has(subj.id)) {
+        uniqueSubjectsMap.set(subj.id, subj);
+      }
+    });
+  });
 
-      {/* Subject Cards */}
-      <motion.div {...fadeUp} transition={{ delay: 0.15, ...fadeUp.transition }}>
-        <h2 className="text-base font-medium text-white/80 mb-4">Subjects</h2>
-        <div className="space-y-3">
-          {MOCK_SUBJECTS.map((subject, i) => {
-            const progress = Math.round((subject.completedTopics / subject.totalTopics) * 100);
-            const statusCfg = STATUS_CONFIG[subject.status as keyof typeof STATUS_CONFIG];
-            return (
-              <motion.div
-                key={subject.id}
-                initial={{ opacity: 0, x: -12 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 + i * 0.08, duration: 0.35, ease: [0.23, 1, 0.32, 1] as [number, number, number, number] }}
-              >
-                <Card className="bg-[hsl(220,15%,10%)]/60 border-white/[0.06] hover:border-white/[0.14] transition-all duration-200 group cursor-pointer">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">{subject.emoji}</span>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="font-medium text-white/90">{subject.name}</p>
-                          <div className="flex items-center gap-1">
-                            <Circle className={`w-1.5 h-1.5 fill-current ${statusCfg.dot.replace('bg-', 'text-')}`} />
-                            <span className={`text-[11px] ${statusCfg.color}`}>{statusCfg.label}</span>
-                          </div>
-                        </div>
-                        {/* Progress bar */}
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
-                            <motion.div
-                              className="h-full bg-gradient-to-r from-violet-500 to-cyan-500 rounded-full"
-                              initial={{ width: 0 }}
-                              animate={{ width: `${progress}%` }}
-                              transition={{ delay: 0.4 + i * 0.08, duration: 0.6, ease: [0.23, 1, 0.32, 1] as [number, number, number, number] }}
-                            />
-                          </div>
-                          <span className="text-xs text-white/30 w-8 text-right">
-                            {progress}%
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-white/30 mt-1">
-                          {subject.completedTopics}/{subject.totalTopics} topics
-                        </p>
-                      </div>
-                      <ArrowRight className="w-4 h-4 text-white/20 group-hover:text-violet-400 group-hover:translate-x-1 transition-all duration-200 shrink-0" />
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            );
-          })}
-        </div>
-      </motion.div>
-    </div>
-  );
+  const subjects = Array.from(uniqueSubjectsMap.values());
+  const progressByTopic = student.studentProgress;
+
+  const subjectData: SubjectData[] = subjects.map(subj => {
+    const totalTopics = subj._count.topicNodes;
+    
+    // Find all topics for this subject that the student has completed
+    // Since we only have topicId in progress, we'd theoretically need the topic's subjectId
+    // But since we didn't fetch topic->subject above, we can just do a parallel query.
+    // However, to keep it simple and optimized, let's fetch topics for these subjects:
+    return {
+      id: subj.id,
+      name: subj.name,
+      emoji: subj.iconEmoji || "📚",
+      totalTopics: totalTopics,
+      completedTopics: 0, // We will compute this in a second pass
+      status: "not_started"
+    };
+  });
+
+  // Second pass: fetch completed topics per subject
+  if (subjects.length > 0) {
+    const topics = await prisma.topicNode.findMany({
+      where: {
+        subjectId: { in: subjects.map(s => s.id) },
+        id: { in: progressByTopic.filter(p => p.status === 'COMPLETED').map(p => p.topicId) }
+      },
+      select: { subjectId: true, id: true }
+    });
+
+    const completedTopicsCountMap: Record<string, number> = {};
+    topics.forEach(t => {
+      completedTopicsCountMap[t.subjectId] = (completedTopicsCountMap[t.subjectId] || 0) + 1;
+    });
+
+    subjectData.forEach(sd => {
+      sd.completedTopics = completedTopicsCountMap[sd.id] || 0;
+      if (sd.completedTopics === 0) {
+        sd.status = "not_started";
+      } else if (sd.completedTopics === sd.totalTopics && sd.totalTopics > 0) {
+        sd.status = "progressing"; // We can call it 'completed' but let's stick to progressing/stuck
+      } else {
+        // Mock 'stuck' randomly or just set progressing
+        sd.status = "progressing";
+      }
+    });
+  }
+
+  const totalCompleted = subjectData.reduce((acc, s) => acc + s.completedTopics, 0);
+
+  return {
+    studentName: student.name || "Student",
+    totalSubjects: subjects.length,
+    totalCompleted,
+    streak: 0,
+    subjects: subjectData
+  };
+}
+
+export default function StudentDashboardPage() {
+  return <StudentDashboardClient dataPromise={getDashboardData()} />;
 }

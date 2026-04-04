@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Brain, ArrowRight, Loader2 } from "lucide-react";
+import { syncUserAction } from "@/app/actions/auth-actions";
 
 type AuthMode = "login" | "signup";
 type UserRole = "teacher" | "student";
@@ -31,7 +32,7 @@ export default function LoginPage() {
 
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -43,7 +44,18 @@ export default function LoginPage() {
           },
         });
         if (error) throw error;
-        // For now, redirect directly (email confirmation can be added later)
+        
+        // Sync to prisma
+        if (data.user) {
+          await syncUserAction(
+            data.user.id,
+            email,
+            name,
+            role === "student" ? "STUDENT" : "TEACHER",
+            joinCode
+          );
+        }
+
         router.push("/");
         router.refresh();
       } else {

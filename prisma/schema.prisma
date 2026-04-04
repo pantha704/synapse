@@ -2,14 +2,11 @@
 // All models reference institution_id for tenant isolation
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
 }
 
 // ─── Multi-Tenancy Root ────────────────────────────────────────
@@ -49,12 +46,13 @@ model User {
   institution Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
 
   // Teacher relations
-  taughtBatches  Batch[]  @relation("BatchTeacher")
+  taughtBatches Batch[] @relation("BatchTeacher")
 
   // Student relations
-  enrolledBatches   BatchStudent[]
-  studentProgress   StudentProgress[]
-  engagementEvents  EngagementEvent[]
+  enrolledBatches           BatchStudent[]
+  studentProgress           StudentProgress[]
+  engagementEvents          EngagementEvent[]
+  studentResourceProgresses StudentResourceProgress[]
 
   @@index([institutionId])
   @@index([supabaseId])
@@ -135,6 +133,12 @@ model TopicNode {
   subjectId   String  @map("subject_id")
   parentId    String? @map("parent_id")
 
+  // Canvas Persistence
+  positionX Float   @default(0) @map("position_x")
+  positionY Float   @default(0) @map("position_y")
+  nodeType  String  @default("topic") @map("node_type") // "chapter" | "topic"
+  isLocked  Boolean @default(true) @map("is_locked")
+
   subject  Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
   parent   TopicNode?  @relation("TopicTree", fields: [parentId], references: [id])
   children TopicNode[] @relation("TopicTree")
@@ -152,13 +156,14 @@ model Resource {
   title     String
   type      ResourceType
   url       String?
-  content   String?      // For text-based resources / announcements
+  content   String? // For text-based resources / announcements
   subjectId String       @map("subject_id")
   topicId   String?      @map("topic_id")
   createdAt DateTime     @default(now()) @map("created_at")
 
-  subject Subject    @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  topic   TopicNode? @relation(fields: [topicId], references: [id])
+  subject                   Subject                   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  topic                     TopicNode?                @relation(fields: [topicId], references: [id])
+  studentResourceProgresses StudentResourceProgress[]
 
   @@index([subjectId])
   @@map("resources")
@@ -195,6 +200,21 @@ model StudentProgress {
   @@map("student_progress")
 }
 
+model StudentResourceProgress {
+  id          String    @id @default(cuid())
+  studentId   String    @map("student_id")
+  resourceId  String    @map("resource_id")
+  isCompleted Boolean   @default(false) @map("is_completed")
+  completedAt DateTime? @map("completed_at")
+
+  student  User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, resourceId])
+  @@index([studentId])
+  @@map("student_resource_progress")
+}
+
 enum EventType {
   LOGIN
   PAGE_VIEW
@@ -207,7 +227,7 @@ model EngagementEvent {
   id        String    @id @default(cuid())
   studentId String    @map("student_id")
   type      EventType
-  metadata  Json?     // Flexible payload (page path, resource id, etc.)
+  metadata  Json? // Flexible payload (page path, resource id, etc.)
   createdAt DateTime  @default(now()) @map("created_at")
 
   student User @relation(fields: [studentId], references: [id], onDelete: Cascade)
