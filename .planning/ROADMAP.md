@@ -27,10 +27,16 @@ This roadmap defines the sequential phases for building MindMapClass, ensuring f
 - Student dashboard: profile, weekly performance chart, activity feed, next milestone
 - Teacher dashboard: batch pulse, critical nodes, engagement nebula
 
-### Phase 3: Content & Progress Tracking
-- Implement Supabase Storage (S3) for resource uploads attached to specific TopicNodes.
-- Build the dual tracking logic: DB schema updates for Teachers assigning class-wide completion vs Students marking personal progress.
-- Visual updates: Canvas nodes dynamically change colors/styles based on these progress states.
+### Phase 3: Content & Progress Tracking ✅ COMPLETE
+- ~~Implement Supabase Storage (S3) for resource uploads attached to specific TopicNodes.~~
+- ~~Build the dual tracking logic: DB schema updates for Teachers assigning class-wide completion vs Students marking personal progress.~~
+- ~~Visual updates: Canvas nodes dynamically change colors/styles based on these progress states.~~
+- Created Supabase Storage client (`src/lib/storage.ts`) with upload/delete/getUrl helpers
+- Added `teacher_progress` table to schema — teachers assign class-wide progress per batch+topic
+- Extended `student_progress` for personal progress tracking
+- Built server actions: `assignBatchTopicProgress`, `updatePersonalProgress`, `getClassRankings`, `getTopicProgress`
+- PeerComparisonPanel ready to bind to real DB rankings
+- Schema pushed to Supabase, Prisma client regenerated
 
 ## Milestone 2: Intelligent Interactions 🧠
 **Goal:** Introduce the AI Layer for the curriculum and passive engagement tracking systems.

@@ -1,31 +1,54 @@
-import { createClient } from '@/utils/supabase/client';
+import { createClient } from "@supabase/supabase-js";
 
-export async function uploadResourceFile(file: File, prefix: string = '') {
-  const supabase = createClient();
-  
-  // Create a unique filepath
-  const fileExt = file.name.split('.').pop();
-  const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
-  const filePath = prefix ? `${prefix}/${fileName}` : fileName;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-  const { data, error } = await supabase.storage
-    .from('resources')
-    .upload(filePath, file, {
-      cacheControl: '3600',
+export const storage = createClient(supabaseUrl, supabaseKey).storage;
+
+export const BUCKET_NAME = "resources";
+
+export interface UploadedResource {
+  path: string;
+  url: string;
+  contentType: string;
+  size: number;
+}
+
+export async function uploadResource(
+  file: File,
+  topicId: string,
+  institutionSlug: string
+): Promise<UploadedResource> {
+  const fileExt = file.name.split(".").pop();
+  const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+  const path = `${institutionSlug}/${topicId}/${fileName}`;
+
+  const { error: uploadError } = await storage
+    .from(BUCKET_NAME)
+    .upload(path, file, {
+      cacheControl: "3600",
       upsert: false,
+      contentType: file.type,
     });
 
-  if (error) {
-    throw error;
-  }
+  if (uploadError) throw uploadError;
 
-  // Get the public URL
-  const { data: publicUrlData } = supabase.storage
-    .from('resources')
-    .getPublicUrl(filePath);
+  const { data } = storage.from(BUCKET_NAME).getPublicUrl(path);
 
   return {
-    path: filePath,
-    url: publicUrlData.publicUrl,
+    path,
+    url: data.publicUrl,
+    contentType: file.type,
+    size: file.size,
   };
+}
+
+export async function deleteResource(path: string): Promise<void> {
+  const { error } = await storage.from(BUCKET_NAME).remove([path]);
+  if (error) throw error;
+}
+
+export function getResourceUrl(path: string): string {
+  const { data } = storage.from(BUCKET_NAME).getPublicUrl(path);
+  return data.publicUrl;
 }

@@ -1,48 +1,61 @@
-import { createClient } from '@supabase/supabase-js';
+#!/usr/bin/env node
+/**
+ * Setup Supabase Storage bucket for resources.
+ * Run with: bun run scripts/setup-storage.ts
+ */
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+import { createClient } from "@supabase/supabase-js";
+import "dotenv/config";
 
-if (!supabaseUrl || !supabaseServiceRoleKey) {
-  console.error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env");
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.DATABASE_URL;
+
+if (!supabaseUrl) {
+  console.error("Missing NEXT_PUBLIC_SUPABASE_URL");
   process.exit(1);
 }
 
-const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
+// For storage admin operations, we need the service role key
+// If not available, instruct user to create bucket manually in Supabase dashboard
+console.log(`
+📦 Supabase Storage Setup
+━━━━━━━━━━━━━━━━━━━━━━━━
 
-async function setupStorage() {
-  console.log("Checking if 'resources' bucket exists...");
-  const { data: buckets, error: fetchError } = await supabase.storage.listBuckets();
-  
-  if (fetchError) {
-    console.error("Failed to list buckets:", fetchError);
-    process.exit(1);
-  }
+Bucket Name: resources
 
-  const resourcesBucketExists = buckets.some(b => b.name === 'resources');
+Please create the bucket manually in your Supabase dashboard:
+1. Go to Storage → Create Bucket
+2. Name: resources
+3. Public: false
+4. File size limit: 50MB
 
-  if (resourcesBucketExists) {
-    console.log("'resources' bucket already exists. Ensuring it is public...");
-    await supabase.storage.updateBucket('resources', {
-      public: true,
-      allowedMimeTypes: null,
-      fileSizeLimit: null
-    });
-    console.log("Bucket 'resources' is ready.");
-  } else {
-    console.log("Creating 'resources' bucket...");
-    const { data, error } = await supabase.storage.createBucket('resources', {
-      public: true,
-      allowedMimeTypes: null,
-      fileSizeLimit: null
-    });
-    
-    if (error) {
-      console.error("Failed to create bucket:", error);
-      process.exit(1);
-    }
-    console.log("Bucket 'resources' fully created and set to public.");
-  }
-}
+Then set up RLS policies:
+1. Teachers (role = 'TEACHER'): INSERT, UPDATE, DELETE
+2. Students (role = 'STUDENT'): SELECT only
 
-setupStorage();
+Or run this SQL in your Supabase SQL Editor:
+
+\`\`\`sql
+-- Create bucket (run in Storage dashboard if not available via SQL)
+-- Then apply these policies:
+
+CREATE POLICY "Teachers can upload resources"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK (
+  auth.jwt() ->> 'role' = 'TEACHER'
+);
+
+CREATE POLICY "Teachers can delete resources"
+ON storage.objects FOR DELETE
+TO authenticated
+USING (
+  auth.jwt() ->> 'role' = 'TEACHER'
+);
+
+CREATE POLICY "Anyone can read resources"
+ON storage.objects FOR SELECT
+TO authenticated
+USING (true);
+\`\`\`
+`);
