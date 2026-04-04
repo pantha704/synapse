@@ -53,6 +53,7 @@ model User {
   studentProgress           StudentProgress[]
   engagementEvents          EngagementEvent[]
   studentResourceProgresses StudentResourceProgress[]
+  aiSessions                AISession[]
 
   @@index([institutionId])
   @@index([supabaseId])
@@ -107,6 +108,8 @@ model Subject {
   batches     BatchSubject[]
   topicNodes  TopicNode[]
   resources   Resource[]
+  documentChunks DocumentChunk[]
+  aiSessions     AISession[]
 
   @@index([institutionId])
   @@map("subjects")
@@ -147,6 +150,7 @@ model TopicNode {
   resources       Resource[]
   studentProgress StudentProgress[]
   teacherProgress TeacherProgress[]
+  documentChunks  DocumentChunk[]
 
   @@index([subjectId])
   @@index([parentId])
@@ -217,6 +221,56 @@ model TeacherProgress {
   @@index([batchId])
   @@index([topicId])
   @@map("teacher_progress")
+}
+
+model DocumentChunk {
+  id        String   @id @default(cuid())
+  topicId   String   @map("topic_id")
+  subjectId String   @map("subject_id")
+  content   String   @db.Text
+  embedding Unsupported("vector(1024)")?
+  pageNum   Int?     @map("page_num")
+  chunkIdx  Int      @map("chunk_idx")
+  sourceUrl String?  @map("source_url")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  topic   TopicNode @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  subject Subject   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@index([subjectId])
+  @@index([topicId])
+  @@map("document_chunks")
+}
+
+model AISession {
+  id        String   @id @default(cuid())
+  studentId String   @map("student_id")
+  subjectId String   @map("subject_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  expiresAt DateTime @default(now()) @map("expires_at")
+
+  student  User        @relation(fields: [studentId], references: [supabaseId], onDelete: Cascade)
+  subject  Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  messages AIMessage[]
+
+  @@unique([studentId, subjectId])
+  @@index([studentId])
+  @@index([expiresAt])
+  @@map("ai_sessions")
+}
+
+model AIMessage {
+  id        String   @id @default(cuid())
+  sessionId String   @map("session_id")
+  role      String
+  content   String   @db.Text
+  sources   Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  session AISession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@map("ai_messages")
 }
 
 model StudentResourceProgress {
