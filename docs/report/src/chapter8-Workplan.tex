@@ -1,6 +1,6 @@
 \chapter{Work Plan}
 
-The project runs across two semesters, split into Project-I and Project-II. Each phase has defined deliverables.
+The project is scheduled over two semesters, Project-I and Project-II, with a deliverable attached to each month.
 
 \section{Project-I (Semester 1)}
 
@@ -11,11 +11,11 @@ The project runs across two semesters, split into Project-I and Project-II. Each
 \begin{tabular}{|c|p{7cm}|c|}
 \hline
 \thead{Month} & \thead{Activity} & \thead{Deliverable} \\ \hline
-Month 1 & Review existing LMS platforms and related literature. Finalize system requirements and feature list. & Requirements Document \\ \hline
-Month 2 & Design the system architecture and database schema. Set up the Next.js project, Supabase backend, and authentication flow. & Architecture Design \\ \hline
-Month 3 & Build multi-tenant onboarding, role-based access control, and the teacher dashboard for course and batch management. & Admin \& Teacher Modules \\ \hline
-Month 4 & Build the React Flow mindmap canvas for curriculum creation. Implement node states and basic progress tracking. & Mindmap Canvas \\ \hline
-Month 5 & Build the student dashboard with mindmap view. Implement dual progress tracking and the class progress dashboard. & Student Module \& Analytics \\ \hline
+Month 1 & Read across existing LMS platforms and the literature behind them. Settle the requirement list and cut it to what one team can finish. & Requirements Document \\ \hline
+Month 2 & Design the architecture and schema. Stand up the Next.js project, the Supabase backend and the authentication flow. & Architecture Design \\ \hline
+Month 3 & Build multi-tenant onboarding and role-based access, then the teacher dashboard. & Admin \& Teacher Modules \\ \hline
+Month 4 & Build the React Flow canvas: node layout, dragging, saved positions, and the state model behind each node. & Mindmap Canvas \\ \hline
+Month 5 & Build the student view and the class dashboard. Wire dual tracking from stored records rather than from derived guesses. & Student Module \& Analytics \\ \hline
 \end{tabular}
 \end{table}
 
@@ -29,9 +29,9 @@ Month 5 & Build the student dashboard with mindmap view. Implement dual progress
 \begin{tabular}{|c|p{7cm}|c|}
 \hline
 \thead{Month} & \thead{Activity} & \thead{Deliverable} \\ \hline
-Month 1 & Integrate the RAG-based AI study assistant. Set up pgvector for document embeddings and Groq for inference. & AI Chat Module \\ \hline
-Month 2 & Build admin analytics dashboards. Add silent engagement tracking (login patterns, time spent on resources). & Analytics Dashboard \\ \hline
-Month 3 & Run user testing with a group of students and teachers. Collect feedback on usability and engagement. & User Testing Report \\ \hline
-Month 4 & Fix bugs, optimize performance, and finalize documentation. Prepare the final report and presentation. & Final Report \\ \hline
+Month 1 & Integrate the retrieval layer: pgvector for embeddings, PostgreSQL full-text search as the fallback, Groq for inference. & AI Retrieval Module \\ \hline
+Month 2 & Build the analytics dashboards and widen engagement instrumentation beyond topic completion. & Analytics Dashboard \\ \hline
+Month 3 & Run the demo with a group of students and teachers. Collect feedback on usability, legibility and trust in the assistant. & User Testing Report \\ \hline
+Month 4 & Close bugs, tighten performance, finish documentation, and prepare the report and the presentation. & Final Report \\ \hline
 \end{tabular}
 \end{table}

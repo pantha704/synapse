@@ -1,21 +1,21 @@
 \chapter{Problem Statement}
 
-Most LMS platforms available today work the same way. Courses are organized as a flat list of topics, and student progress is measured through assignment scores, quiz marks, and attendance records. This gets the job done at a surface level, but it misses a lot.
+Nearly every LMS on the market organises a course the same way. Topics become a flat list; progress becomes assignment scores, quiz marks and attendance. At a surface level that is enough to run a course. It is not enough to understand one.
 
-\textbf{From the student's perspective,} grades are about the only feedback they get. A student can see that they scored 60\% on a quiz, but they cannot easily tell which topics connect to each other, which ones they missed, or what to study next. Progress information is scattered across tabs and pages. Getting a complete picture takes effort, and most students do not bother. The result is that many students feel lost in their courses without understanding exactly why.
+\textbf{From the student's side,} the grade is almost the only feedback that arrives, and it arrives late. A student who scored 60\% on a quiz knows the number but not the cause: which topic the question came from, what it connected to, which earlier gap it exposed. The evidence is scattered over tabs, so assembling a picture takes deliberate effort, and most students do not make it. They feel lost in a course without being able to name the reason.
 
-\textbf{From the teacher's perspective,} a gradebook full of numbers does not say much about what is actually going on. It does not clearly show which students are falling behind, or which topics are confusing most of the class. By the time poor grades make the problem obvious, it is usually too late to intervene effectively.
+\textbf{From the teacher's side,} a gradebook records outcomes, not processes. It cannot show which students are drifting this week, or which topic confused most of the room on Tuesday. The mark that finally makes the problem visible is usually the one that ends the chance to fix it.
 
-\textbf{The gap between teaching and learning} is the core issue. A teacher moves through the syllabus at a planned pace. Not every student keeps up. Some fall behind on certain topics while doing fine on others. Current LMS tools have no good way to compare where the teacher is in the syllabus with where each student actually stands. This mismatch goes unnoticed until end-of-term exams make it impossible to ignore.
+\textbf{Between the two} sits a mismatch nobody can see. A teacher moves through the syllabus at a planned pace. Students do not move in step: some are ahead on one topic and behind on another, and none of that is visible while the course is running. Current tools cannot place the teacher's position on the syllabus next to each student's position, so the gap widens quietly until the final exam reports it.
 
-\textbf{Lack of visual engagement} is a separate but related problem. Cognitive science research shows that visual representations help people understand and retain information better \cite{eppler2006comparison}. Mind maps improve conceptual understanding. But most LMS platforms present everything as text and tables, which does not do much to hold a student's attention.
+\textbf{Visual engagement} is a separate issue, and an old one in the literature. Work on visual representations and concept maps finds that structure, drawn rather than listed, supports comprehension and recall \cite{eppler2006comparison}. Most platforms ignore that finding, because text and tables are cheaper to build.
 
-\textbf{AI integration concerns} make things worse. AI chatbots are becoming common in education, but most use general purpose language models that have no connection to any particular course. They can give answers that are technically correct but irrelevant to what the student is studying, or answers that are wrong entirely. Without being tied to the teacher's approved materials, these tools are unreliable.
+\textbf{The AI problem} complicates all of it. Chatbots are now common in education and are usually general-purpose: they know a little about everything and nothing about the course in front of the student. Asked about a specific syllabus, such a model can be fluent and wrong at the same time. Without a link to the teacher's approved material, it is a confident stranger in the classroom.
 
-The problem this research addresses is the absence of an LMS that can:
+This research addresses the absence of an LMS that can:
 \begin{enumerate}
-    \item Show students their learning progress as an interactive mindmap instead of a flat list of scores.
-    \item Let teachers compare their teaching progress with each student's actual understanding in real time.
-    \item Provide an AI study assistant that only uses the teacher's approved materials, reducing wrong or off-topic answers.
-    \item Support multiple institutions on one platform without mixing their data.
+    \item show a student their progress as an interactive mindmap rather than a list of scores;
+    \item let a teacher compare the planned pace of the syllabus with each student's actual position while the course is still running;
+    \item answer student questions only from the teacher's approved material, so an answer outside that material is refused rather than invented;
+    \item serve several institutions from one deployment without mixing their data.
 \end{enumerate}

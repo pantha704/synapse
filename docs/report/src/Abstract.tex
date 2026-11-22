@@ -1,14 +1,12 @@
 \chapter{Abstract}
 \onehalfspacing
 
-Online learning platforms are everywhere now, but most of them still show student progress as a row of grades or a completion percentage. These numbers do not tell a student which topic they are stuck on, or how far behind they have fallen compared to the rest of the class. Teachers have the same problem in reverse: a spreadsheet of marks does not make it obvious who needs help until it is already too late.
+Online learning platforms are everywhere now, and almost all of them report progress the same way: a row of grades, or one completion percentage per course. Neither tells a student which topic they are actually stuck on, or how far behind the class they have drifted. Teachers run into the mirror image of that problem. A spreadsheet of marks will not show them who needs help this week; by the time the numbers make it obvious, the term is nearly over.
 
-This research proposes an LMS that uses an interactive mindmap to show course progress. The course syllabus is laid out as a branching diagram, like a skill tree in a video game. Each topic is a node. As the teacher opens a topic and the student works through it, the node moves from not started, to in progress, to completed. Both sides can see where things stand at a glance.
+This research proposes an LMS built around an interactive mindmap. The syllabus is drawn as a branching diagram, closer to a skill tree in a role-playing game than to a table of contents, and each topic sits on it as a node. A node moves from not started, to in progress, to completed as the student works through the resources attached to it. Teacher and student read the same picture, and it takes seconds rather than minutes.
 
-The system, called Synapse, is built with Next.js, PostgreSQL, and React Flow for the mindmap canvas. Supabase handles authentication and data storage. It also has an AI study assistant that uses Retrieval-Augmented Generation (RAG) to answer student questions using only the teacher's own uploaded materials, so the answers stay on-topic and grounded.
+We call the system Synapse. It is a Next.js application on PostgreSQL, with React Flow drawing the canvas and Supabase handling authentication and storage. The platform is multi-tenant: several institutions share one deployment, and their rows are kept apart at the database level. Alongside the map sits a retrieval layer for an AI study assistant. It answers from the teacher's own uploaded documents, and when that material does not cover a question it says so rather than improvising.
 
-The goal is straightforward: close the gap between what gets taught and what actually gets learned, using visuals that are quicker to read than a grade sheet. We want to test whether mindmap-based progress tracking makes students more engaged and helps teachers catch problems earlier.
+The claim we want to test is modest and testable. A visual map of the syllabus, updated as work gets done, should be easier to act on than a grade sheet, and it should let a teacher notice a struggling student earlier than a mark would.
 
 \textbf{Keywords:} Learning Management System, Mindmap Visualization, EdTech, Student Progress Tracking, Gamification, Learning Analytics, Retrieval-Augmented Generation
-
-

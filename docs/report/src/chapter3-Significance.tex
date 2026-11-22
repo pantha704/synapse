@@ -1,23 +1,23 @@
 \chapter{Significance of the Study}
 
-This study has practical value for students, teachers, and institutions that use or build learning platforms.
+This study matters to the three groups who live inside a learning platform, and to the people who build them.
 
 \section{Benefits to Students}
 
-The most obvious benefit is for students. Instead of checking a gradebook to see a list of numbers, they see their entire course laid out as a mindmap. Finished topics show as completed nodes. Topics the teacher has opened show as upcoming. Ones the class has not reached stay unopened. This is quicker to read than a spreadsheet, and the visual feedback of watching nodes change state gives students a sense of progress as they work through the material. Hamari et al. found that game-like progress tracking can increase motivation and engagement in educational settings \cite{hamari2014does}.
+Take the most obvious case: a student opening the course. Instead of a gradebook, they get the whole syllabus as a mindmap. What they have finished is marked completed, what they have open is in progress, what comes later is still locked. Reading that takes a glance. Watching a node change state after a resource is finished gives the kind of small, immediate feedback that game designers have relied on for decades; Hamari et al. found that game-like progress systems can raise motivation and engagement in educational settings \cite{hamari2014does}. The learning-path view adds a second reading of the same data, arranged as a path rather than a graph, for students who find the canvas noisy.
 
 \section{Benefits to Teachers}
 
-For teachers, the system replaces the spreadsheet-and-gradebook routine with a class progress view. Instead of scrolling through rows of marks to work out who needs help, a teacher opens one page and sees every student sorted into progressing, stuck, or inactive, based on how recently they touched the material. The dual tracking feature, which compares where the teacher is in the syllabus with where each student actually is, makes it possible to spot students who are falling behind before their grades make it obvious.
+For a teacher the change is smaller to describe and larger to feel. A single page lists every student in the class, sorted into progressing, stuck or inactive by how recently they touched the material. No scrolling through rows to work out who is slipping. The same page places the class position against the syllabus position, so a topic the teacher has finished covering but the class has not started is visible as a gap rather than a hunch.
 
 \section{Benefits to Educational Institutions}
 
-The multi-tenant architecture means multiple schools or departments can run on the same platform without their data leaking into each other. Administrators get a dashboard with usage and performance metrics. This is useful for institutions that want a single platform rather than managing separate installations for each department.
+One deployment can serve several schools or departments. Data from one institution is not readable from another, which is checked at the database rather than asserted in a policy document. An operator account sees tenants; everyone else sees their own. For a college running separate installations per department, that is a practical saving in both cost and maintenance.
 
 \section{Contribution to the EdTech Field}
 
-From a research standpoint, this study combines three areas that are usually studied separately: mindmap-based progress visualization, dual progress tracking, and RAG-scoped AI assistance. There are papers on each of these individually, but few working systems that bring them together in one LMS. Synapse is a practical test of whether that combination actually works.
+Three ideas usually studied apart are combined here: mindmap-based progress visualisation, dual progress tracking, and retrieval scoped to a course. Each has its own literature. Working systems that carry all three are rare, and the interesting question is whether they cooperate or interfere. Synapse is an attempt to answer that with something that runs.
 
 \section{Broader Societal Impact}
 
-On a wider level, better progress tracking tools can help teachers identify and support struggling students earlier. The system is built with open source technologies, so other developers can extend or modify it.
+Wider than any single course, better progress tools move intervention earlier. A student who is caught in week three is cheaper to help than one who is caught after the exam. The stack is open source throughout, so a department can read the code, change it, or run it themselves.

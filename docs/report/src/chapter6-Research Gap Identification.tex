@@ -1,37 +1,37 @@
 \chapter{Research Gap Identification}
 \label{Research_Gap_Identification}
 
-The literature reviewed in Chapter 4 points to several gaps in how current educational platforms handle progress tracking, visualization, and AI assistance. This chapter lists each gap and describes how Synapse addresses it.
+Chapter 4 assembled the literature. Read together, it points at five gaps, and each one is narrow enough to state plainly and answer with something specific rather than with an adjective.
 
 \section{Gap 1: No Visual Progress Mapping in LMS Platforms}
 
-LMS platforms like Moodle, Canvas, and Google Classroom show student progress as lists of assignments and numerical scores. There is no visual representation that shows how topics connect to each other or where a student sits in the overall course structure. A student looking at their dashboard sees rows of grades, not a map of what they have covered and what lies ahead.
+Moodle, Canvas and Google Classroom report a course as a list of assignments with numbers beside them. Nothing on the screen shows how topics relate, or where the student stands inside a structure. A dashboard of rows tells a student what they scored; it does not tell them what they skipped.
 
-\textbf{How Synapse addresses this:} The system replaces the list view with an interactive mindmap. Each topic is a node, and nodes are arranged to show the structure of the syllabus. Students can see the full course layout, zoom into specific sections, and track their progress through four visual states: not started, upcoming, in progress, and completed.
+\textbf{What Synapse does about it:} the list becomes an interactive map. Topics are nodes, the syllabus supplies the edges, and a student can zoom out for the shape of the course or in on one branch. The map shows three states --- not started, in progress, completed --- while the learning-path view derives a fourth, upcoming, for released topics the student has not opened. Both readings come from the same records.
 
 \section{Gap 2: No Dual Progress Tracking}
 
-Current tools track either the teacher's schedule or the student's grades, but not both side by side. There is no built-in way to compare what the teacher has covered with what each student has actually understood. Teachers often do not notice the mismatch until final exams.
+Tools record what the teacher covered or what the student scored. Few place the two side by side, so the comparison a teacher needs most, \emph{where the class is against where I am}, is left to memory and instinct. By the time an exam supplies the comparison, the semester is spent.
 
-\textbf{How Synapse addresses this:} The system keeps two timelines: one for the teacher's delivery and one for each student's progress. Comparing them produces a gap analysis: the system flags the topics a teacher has opened that a given student has not begun, and bands the class by engagement.
+\textbf{What Synapse does about it:} two timelines are stored separately and compared on read. One is the teacher's delivery; one is each student's position. The comparison produces the gap a teacher actually uses: the topics released but not started by a given student, plus an engagement band for the whole class.
 
 \section{Gap 3: Limited Use of Gamification in General-Purpose LMS}
 
-Gamification has been shown to increase student engagement, but it mostly appears in specialized apps like Duolingo and Khan Academy. These platforms target specific subjects and are not general purpose LMS tools. Wider LMS platforms have not adopted visual progression mechanics.
+Gamification has decent evidence behind it, but the products that do it well are specialist apps with one subject and one audience. General-purpose platforms have borrowed the badge and the leaderboard, not the structure. A badge is a reward; a skill tree is a map, and the map is what changes behaviour.
 
-\textbf{How Synapse addresses this:} The mindmap naturally works like a skill tree. Students watch nodes move from not started to in progress and then completed as they work through the material, with an upcoming state derived on the learning-path view for released topics they have not opened. The system also tracks XP points and awards engagement badges.
+\textbf{What Synapse does about it:} the mindmap is already shaped like a skill tree, so the progression mechanic costs nothing extra. Nodes move from not started to in progress to completed as work is done, and the learning-path view adds derived XP, a level per hundred points and badges at the first, fifth, tenth and twenty-fifth completed topic.
 
 \section{Gap 4: AI Assistants Without Curriculum Scope Control}
 
-AI chatbots used in education typically run on general purpose language models that pull from their full training data, not from the specific course the student is taking. The answers may be irrelevant to the syllabus or outright wrong. There is no guarantee the AI is aligned with what the teacher actually teaches.
+A general chatbot answers from everything it was trained on, which is the wrong corpus for a course. It can be right about the subject and wrong about the syllabus in the same paragraph, and a student has no way to tell which half is which.
 
-\textbf{How Synapse addresses this:} The AI assistant uses RAG scoped to the subject's uploaded materials. The vector search is filtered by subject ID, so the model can only retrieve and reference documents the teacher has approved for that course.
+\textbf{What Synapse does about it:} retrieval is scoped to one subject at query time. Chunks are filtered by subject id, so the model can only see documents attached to that course, and a question whose terms match nothing in the index is answered with an explicit "the material does not cover this" rather than a plausible guess. The retrieval and generation path is implemented and tested; mounting the chat surface is the remaining step.
 
 \section{Gap 5: Lack of Multi-Tenant Support in EdTech Platforms}
 
-Many LMS tools are designed for a single institution. Running them for multiple schools means separate installations or complicated workarounds. This makes it hard for a platform provider to serve several institutions from one deployment without data leaking between them.
+Most platforms assume one institution. Serving several schools from one installation usually means either separate deployments or a shared database with a tenant column nobody enforces. The second is the dangerous one: it looks like multi-tenancy until someone forgets a \texttt{where} clause.
 
-\textbf{How Synapse addresses this:} PostgreSQL Row-Level Security is enabled on every table, with tenant-scoped policies for the browser path, and the browser role holds read access only --- no direct writes. The application reaches the database through its own dedicated non-owner role, so isolation of application queries is enforced in code by an institution predicate on every read and write. The single sanctioned cross-tenant read is a \texttt{SECURITY DEFINER} function that lets a student join a batch with a shared code.
+\textbf{What Synapse does about it:} Row-Level Security is enabled on every table and tenant-scoped policies cover the browser path, where the role holds read access only. Application queries run as a dedicated non-owner role and carry the institution predicate explicitly, which is the part that has to be reviewed; a test asserts that two tenants' subjects partition the table exactly, that curriculum writes are refused, and that anonymous reads are refused.
 
 \section{Summary of Research Gaps}
 

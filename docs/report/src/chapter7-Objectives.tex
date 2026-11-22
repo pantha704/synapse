@@ -3,20 +3,20 @@
 
 \section{Main Objective}
 
-To design and build an interactive, mindmap-based Learning Management System (Synapse) that visually tracks student progress and makes it possible to compare what has been taught with what has actually been learned.
+To design and build an interactive, mindmap-based Learning Management System, Synapse, that shows student progress visually and lets a teacher compare what has been taught with what has actually been learned.
 
 \section{Specific Objectives}
 
 \begin{enumerate}
-    \item \textbf{To study} existing LMS platforms and identify where they fall short in progress visualization, student engagement, and learning analytics.
+    \item \textbf{To study} existing LMS platforms and name, concretely, where they fall short on progress visualisation, engagement and analytics.
 
-    \item \textbf{To design} a mindmap-based interface where the course syllabus is shown as a node graph, with each node representing a topic and reflecting its current state (not started, upcoming, in progress, completed).
+    \item \textbf{To design} an interface in which the syllabus is a node graph, each node a topic, and each node's appearance reflects its state: not started, in progress, completed, with upcoming derived on the path view.
 
-    \item \textbf{To implement} dual progress tracking that places the teacher's delivery timeline alongside each student's actual progress, with the gap between them surfaced as a per-student engagement band and a list of topics the class has not started.
+    \item \textbf{To implement} dual progress tracking that holds the teacher's delivery timeline beside each student's position, surfacing the difference as a per-student band and a list of released but unstarted topics.
 
-    \item \textbf{To develop} an AI study assistant using Retrieval-Augmented Generation (RAG) that answers questions using only the teacher's uploaded course materials, avoiding hallucinated or off-topic responses.
+    \item \textbf{To develop} a retrieval-augmented study assistant that answers only from the teacher's uploaded material, and refuses a question the material cannot support instead of inventing an answer.
 
-    \item \textbf{To build} a multi-tenant architecture with Row-Level Security (RLS) so that multiple institutions can share the same platform while their data stays completely separate.
+    \item \textbf{To build} a multi-tenant architecture in which Row-Level Security and explicit tenant predicates keep institutions apart on one deployment, verified by probes rather than by assertion.
 
-    \item \textbf{To evaluate} the system through user testing with students and teachers, measuring whether it improves engagement, progress awareness, and early detection of students who are falling behind.
+    \item \textbf{To evaluate} the result through a demo with students and teachers, asking whether the map improves awareness of progress and whether the class view helps a teacher spot a struggling student earlier than a grade sheet would.
 \end{enumerate}
