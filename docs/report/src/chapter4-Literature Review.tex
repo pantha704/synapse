@@ -1,55 +1,55 @@
 \chapter{Literature Review}
 \label{Literature_Review}
 
-Five bodies of work feed into Synapse: learning management systems, mind mapping, gamification, learning analytics dashboards, and retrieval-augmented assistants. They are reviewed here in that order, with an eye on where each one stops short of what a course actually needs.
+Five bodies of work bear on the proposed system: learning management systems, mind mapping, gamification, learning analytics dashboards, and retrieval-augmented assistants. The review below treats each in turn, and closes with the gap that the five have in common.
 
-\section{Learning Management Systems (LMS)}
+\section{Learning Management Systems}
 
-Dougiamas and Taylor \cite{dougiamas2004moodle} built Moodle as an open-source course management system on social constructivist foundations, and the design follows from that commitment: an instructor sets up a space, and students build knowledge in it through discussion. It became one of the most widely deployed platforms in the world, yet its default interface still presents a course as a list of resources and activities, with progress reduced to gradebook columns and completion ticks.
+Moodle is the reference case for an open-source platform built on a pedagogical commitment rather than on a content model. Dougiamas and Taylor \cite{dougiamas2004moodle} describe a system in which an instructor establishes a space and students construct knowledge inside it through discussion, and that principle shaped both the interface and the data model. Twenty years of adoption later, the default course page is still a list of resources with completion ticks beside them, and the gradebook is still the instrument through which progress is read.
 
-Al-Samarraie and Saeed \cite{alsamarraie2018systematic} reviewed 29 studies of cloud tools used in blended learning and sorted them into three groups: synchronous tools, LMS platforms, and social networking tools. Collaboration was well supported across all three, through shared files, co-editing and group discussion. What the review did not examine is how a student judges their own position in the course, which is the question this work starts from.
+Cloud-based tools in blended learning were surveyed by Al-Samarraie and Saeed \cite{alsamarraie2018systematic}, who classified 29 studies into synchronous tools, learning management systems and social networking tools. Collaboration was well supported in all three categories, through shared files, co-editing and discussion threads. What the survey did not address is the student's own estimate of their position in a course, which is the question this work begins from.
 
-Bozkurt et al. \cite{bozkurt2023speculative} gathered reflections from more than thirty education researchers on generative AI, using a speculative method instead of an empirical one. Two of their points bear on this project: the division of labour between a human teacher and an AI tool has to be settled deliberately, and students are poor at telling a reliable answer from a fluent fabrication. The second is the reason Synapse scopes retrieval to course material instead of handing students a general chatbot.
+Generative artificial intelligence entered the same conversation more recently. Bozkurt et al. \cite{bozkurt2023speculative} assembled reflections from more than thirty education researchers using a speculative method, and two of their observations bear directly on the present design. The division of labour between a teacher and an automated assistant has to be decided rather than allowed to emerge, and students are poor judges of whether a fluent answer is a reliable one. The second observation is the reason retrieval here is confined to course material.
 
 \section{Mind Mapping in Education}
 
-Buzan and Buzan \cite{buzan2006mind} popularised mind mapping as a way of externalising associations: a central idea, branches outward, colour and image carrying some of the structure. Their claim was that the shape of the drawing matches the shape of recall, and the technique has stayed in use as a study and planning tool in schools and offices alike.
+The technique that Buzan and Buzan \cite{buzan2006mind} popularised rests on a correspondence between the shape of a drawing and the shape of recall: a central concept, branches radiating outward, colour and image carrying part of the meaning. Whatever the strength of the underlying claim, the drawing is easier to inspect than a list, which is why the technique survived as a study aid long after its theoretical framing was questioned.
 
-Eppler \cite{eppler2006comparison} put four visual formats side by side, comparing concept maps, mind maps, conceptual diagrams and visual metaphors, and found that the format matters to the task. Mind maps suit hierarchical, tree-shaped relationships, which is exactly what a syllabus is. Concept maps do something a tree cannot: they show a link between two topics that sit on different branches. That distinction shaped the design here, and the chapter on methodology explains where the strict tree was kept and where an edge was allowed.
+Format matters to the task, and Eppler \cite{eppler2006comparison} established where each format belongs by comparing concept maps, mind maps, conceptual diagrams and visual metaphors. A mind map suits a hierarchical, tree-shaped body of knowledge, which a syllabus typically is. A concept map can express a relationship that a tree cannot, such as a link between two topics on different branches. The design in Chapter 5 keeps a tree for the syllabus and permits additional edges between topics, which is a compromise between the two.
 
-Mind maps have nevertheless stayed a private study aid. No widely used LMS has made one the primary surface for navigation and progress, which is the gap this system walks into.
+That mind mapping remained a private study technique is the striking part of this literature. In two decades of learning management systems, none of the widely adopted platforms has made a map the primary surface for navigation and progress. The gap is not conceptual; it is an absence of implementation.
 
 \section{Gamification in Learning}
 
-Deterding et al. \cite{deterding2011game} defined gamification as the use of game design elements outside games, and drew a line between a full game and the selective borrowing of one mechanic, such as points or a progression indicator. The line is useful here, because Synapse borrows a mechanic, not a genre: the skill tree comes from role-playing games, while the course stays a course.
+Deterding et al. \cite{deterding2011game} supplied the definition that most subsequent work uses, and the distinction that matters here: a complete game is not the same thing as the selective use of one game mechanic. Synapse borrows a mechanic, the skill tree, without presenting a course as a game, and the distinction is what keeps the borrowing defensible.
 
-Hamari et al. \cite{hamari2014does} reviewed empirical gamification studies across domains and found mostly positive effects on engagement and motivation, with two caveats that matter more than the headline. Effects were stronger in education and health than in commerce or workplace settings, and they tended to fade when the game layer felt bolted on instead of connected to the activity itself. A progress indicator tied to actual coursework is the case least likely to fade, since the feedback is the work.
+Evidence on outcomes is favourable but conditional. Hamari et al. \cite{hamari2014does} reviewed empirical studies across domains and found predominantly positive effects on engagement, with two qualifications worth recording: effects were stronger in education and health than in commerce, and they weakened when the game layer was disconnected from the underlying task. A progression indicator driven by coursework is not exposed to the second effect, since the feedback is a by-product of the work.
 
-Dicheva et al. \cite{dicheva2015gamification} mapped gamification research in education by mechanic, level, subject and method. Points, badges and leaderboards dominate, and the authors asked for controlled experiments that measure learning outcomes instead of engagement counts. Visual progression of the skill-tree kind is thin in that literature, which is one reason a working system is worth building.
+Coverage of specific mechanics comes from Dicheva et al. \cite{dicheva2015gamification}, whose systematic mapping classified educational gamification by mechanic, level, subject and evaluation method. Points, badges and leaderboards dominate, and the call was for controlled experiments measuring learning rather than engagement counts. Visual progression of the skill-tree kind is thin in that map, which is an argument for documenting a working instance.
 
-Duolingo and Khan Academy are the familiar commercial successes, and both are subject-specific: language drills in one case, mathematics in the other. A general-purpose LMS that applies tree-shaped progression to any syllabus has not been attempted at scale.
+Two commercial products are usually cited as successes, and both are subject-specific: Duolingo for language practice and Khan Academy for mathematics. A general-purpose platform that applies tree-shaped progression to an arbitrary syllabus has not been attempted at scale.
 
 \section{Learning Analytics and Visual Dashboards}
 
-Siemens \cite{siemens2013learning} traced learning analytics from a scattering of papers into a discipline with its own conferences and research centres. His argument was that the field should move past counting clicks toward modelling the learning process behind them, and he raised privacy and consent early, before dashboards became routine.
+The discipline's own history is instructive. Siemens \cite{siemens2013learning} traced its formation from scattered publications into conferences, centres and a research society, and argued that counting clicks is not the same as modelling learning. Privacy and consent were raised in the same early work, before dashboards became routine.
 
-Verbert et al. \cite{verbert2014learning} surveyed dashboard implementations and grouped them by setting: traditional lectures, group work, and awareness or reflection in online learning. Most aimed at awareness and goal-setting, and most stopped at basic charts. The paper's recommendation was for visualisations that go beyond bars and lines, which is a fair description of what is missing.
+What dashboards actually display was surveyed by Verbert et al. \cite{verbert2014learning}, who grouped implementations by setting: lectures, group work, and awareness or reflection in online learning. Most aimed at awareness and goal setting, and most reached for basic charts. The recommendation was for visualisations beyond bars and lines, which describes precisely what is missing.
 
-Schwendimann et al. \cite{schwendimann2017perceiving} reviewed 55 dashboard studies and reported a field still in its prototype phase: proof of concept instead of production. Network graphs, trees and mindmap layouts were almost absent from the dashboards they examined, and they asked for dashboards co-designed with students and teachers instead of built on guesses about what would be useful.
+The largest review of the area, by Schwendimann et al. \cite{schwendimann2017perceiving}, covered 55 studies and found a field still producing prototypes rather than production systems. Network graphs, trees and mindmap layouts were almost absent from the corpus. A second finding is methodological: dashboards were built on assumptions about useful information rather than co-designed with the students and teachers who would read them.
 
-Dual tracking is the specific absence this project responds to. None of the dashboards in those reviews places the teacher's planned position in the syllabus next to each student's actual position, which is the comparison a teacher needs in week four instead of in week fourteen.
+Dual tracking is the specific absence. Across those reviews, no dashboard places the teacher's position in the syllabus beside each student's position, and that is the comparison that identifies a gap while a course is still running.
 
-\section{AI-Powered Education and RAG}
+\section{Artificial Intelligence and Retrieval-Augmented Generation}
 
-Lewis et al. \cite{lewis2020retrieval} introduced Retrieval-Augmented Generation as a way of grounding a language model in documents it was not trained on. A retriever finds passages, a generator conditions on them, and the answer inherits a provenance the model alone cannot provide. On open-domain question answering their system beat a purely parametric model, and the gain came precisely where facts live outside the weights.
+Grounding a language model in documents rather than parameters is the contribution of Lewis et al. \cite{lewis2020retrieval}. A retriever selects passages, a generator conditions on them, and the answer acquires a provenance that a parametric model cannot provide. On open-domain question answering the method outperformed a purely parametric baseline, with the gain concentrated in questions whose answers lie outside the training data.
 
-For a course, that maps onto a useful constraint. A question about a topic is answered from the notes and readings the teacher uploaded, not from whatever the model absorbed during training. What most RAG tutoring systems have not done is live inside a full LMS; they tend to be standalone prototypes with a folder of documents. Synapse builds the index from what each teacher uploads, and keeps the index scoped to one subject at query time.
+For a course, the mapping is direct: a question is answered from the notes and readings supplied for that subject, not from what the model absorbed during training. Integration into a complete learning management system is where existing work thins out, since most retrieval-augmented tutors are research prototypes operating on a folder of documents. The implementation described here builds the index from material attached to a subject and restricts retrieval to that subject at query time.
 
-Bozkurt et al. \cite{bozkurt2023speculative} add the caution that a confident wrong answer is worse than no answer when a student cannot check it. Scoping retrieval is the cheapest guard available, and it is the one this system adopts.
+Bozkurt et al. \cite{bozkurt2023speculative} add the caution that shapes the guard: a confident wrong answer is worse than no answer when the student cannot check it. Restricting retrieval is the cheapest safeguard available, and it is the one adopted.
 
 \section{Summary of the Literature}
 
-Table \ref{tab:literature_summary} condenses the five areas into what exists and what is missing.
+Table \ref{tab:literature_summary} condenses the five areas into current state and identified gap.
 
 \begin{table}[H]
 \centering

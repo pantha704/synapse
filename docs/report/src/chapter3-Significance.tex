@@ -1,23 +1,23 @@
 \chapter{Significance of the Study}
 
-This study matters to the three groups who live inside a learning platform, and to the people who build them.
+The work is relevant to the three groups who use a learning platform, and to those who build them.
 
 \section{Benefits to Students}
 
-Take the most obvious case: a student opening the course. Instead of a gradebook, they get the whole syllabus as a mindmap. What they have finished is marked completed, what they have open is in progress, what comes later is still locked. Reading that takes a glance. Watching a node change state after a resource is finished gives the kind of small, immediate feedback that game designers have relied on for decades; Hamari et al. found that game-like progress systems can raise motivation and engagement in educational settings \cite{hamari2014does}. The learning-path view adds a second reading of the same data, arranged as a path instead of a graph, for students who find the canvas noisy.
+A student is presented with the syllabus as a mindmap instead of a gradebook. Completed topics are marked as completed, the topic currently under study is marked in progress, and material not yet released remains locked. The representation can be read at a glance, and each change of state follows an action the student has taken, which provides immediate feedback on progress. Hamari et al. report that game-like progression systems can increase motivation and engagement in educational settings \cite{hamari2014does}. A second rendering of the same records, the learning-path view, presents the course as a sequence instead of a graph for students who find the canvas difficult to read.
 
 \section{Benefits to Teachers}
 
-For a teacher the change is smaller to describe and larger to feel. A single page lists every student in the class, sorted into progressing, stuck or inactive by how recently they touched the material. No scrolling through rows to work out who is slipping. The same page places the class position against the syllabus position, so a topic the teacher has finished covering but the class has not started is visible as a gap instead of a hunch.
+The teacher's class view replaces the gradebook with a single page on which every student is classified as progressing, stuck or inactive according to the recency of their recorded activity. Identifying a student who requires attention becomes a matter of reading one page instead of inspecting individual rows. The same page relates the position of the class to the position of the syllabus, so a topic that has been released but not begun appears as an observable gap.
 
 \section{Benefits to Educational Institutions}
 
-One deployment can serve several schools or departments. Data from one institution is not readable from another, which is checked at the database instead of asserted in a policy document. An operator account sees tenants; everyone else sees their own. For a college running separate installations per department, that is a practical saving in both cost and maintenance.
+A single deployment can serve several schools or departments. Records belonging to one institution are not accessible from another, and this property is verified by database probes instead of asserted in policy documentation. An operator account manages tenants, while every other account sees only its own institution. For an institution that currently maintains separate installations for each department, the reduction in cost and administrative effort is direct.
 
 \section{Contribution to the EdTech Field}
 
-Three ideas usually studied apart are combined here: mindmap-based progress visualisation, dual progress tracking, and retrieval scoped to a course. Each has its own literature. Working systems that carry all three are rare, and the interesting question is whether they cooperate or interfere. Synapse is an attempt to answer that with something that runs.
+Three areas that are usually investigated separately are combined in one system: mindmap-based progress visualisation, dual progress tracking, and retrieval constrained to course material. Each has an established literature, but implementations that contain all three are uncommon, and the interaction between them is not well documented. The present work provides an implementation in which that interaction can be observed.
 
 \section{Broader Societal Impact}
 
-Wider than any single course, better progress tools move intervention earlier. A student who is caught in week three is cheaper to help than one who is caught after the exam. The stack is open source throughout, so a department can read the code, change it, or run it themselves.
+Better progress instruments allow intervention to occur earlier, and a student supported in the third week of a course is easier to help than one identified after the examination. The implementation uses open-source components throughout, so an institution can inspect, modify and operate the system independently.

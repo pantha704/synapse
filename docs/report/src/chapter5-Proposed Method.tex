@@ -1,32 +1,32 @@
 \chapter{Proposed Methodology}
 
-This chapter sets out how Synapse is put together: the shape of the application, the layers it is built from, and the four workflows that carry most of the user experience. It closes with what is deliberately out of scope for this version, since a proposal that claims everything is usually accurate about nothing.
+This chapter describes the architecture of Synapse, the layers from which it is constructed, and the four workflows that account for most of the user experience. It concludes with a statement of the limitations of the present implementation, since a description of a system that does not distinguish between what has been built and what remains to be built is of limited value in an assessment.
 
 \section{System Overview}
 
-Synapse is a web application that replaces the usual list of topics with an interactive map. One Next.js deployment serves three roles: Administrators, Teachers and Students, each routed to a different surface after sign-in.
+Synapse is a web application in which the course syllabus replaces the conventional list of topics with an interactive map. A single Next.js deployment serves three roles, namely Administrator, Teacher and Student, each routed to a distinct surface after authentication.
 
-The teacher works on a canvas. Nodes can be dragged, re-parented and their positions saved, and an assignment can be set against a topic. Importing a PDF or a link into a topic is implemented in the ingestion backend, but the screen that would let a teacher do it is not part of this build, so the demo ships with seeded material. Students open the same map in read-only form. A node carries one of three states:
+The teacher works on a canvas on which nodes can be repositioned and re-parented, with the resulting layout persisted, and on which an assignment can be associated with a topic. Ingestion of a PDF or a link is implemented in the backend, but the interface through which a teacher would invoke it is not part of the present build, and the demonstration therefore uses seeded material. The student opens the same map in read-only form. A node is represented in one of three states:
 
 \begin{itemize}
-    \item \textbf{Not started} --- the topic is locked; its resources cannot be opened yet.
-    \item \textbf{In progress} --- the student has opened it and is working through the resources.
-    \item \textbf{Completed} --- every resource on the topic has been marked done.
+    \item \textbf{Not started}: the topic is locked and its resources cannot be opened.
+    \item \textbf{In progress}: the topic has been opened and its resources are being worked through.
+    \item \textbf{Completed}: every resource associated with the topic has been marked as done.
 \end{itemize}
 
-The fourth state a reader might expect, \emph{upcoming}, is not drawn on the canvas. It is derived on the learning-path view, which shows released topics the student has not opened; that view is a separate rendering of the same records instead of a different data model.
+A fourth state, \emph{upcoming}, is not represented on the canvas. It is derived in the learning-path view for topics that have been released and not yet opened. The learning-path view is an alternative rendering of the same records and not a separate data model.
 
 \section{System Architecture}
 
-Three layers, each with one job:
+The system is organised into three layers, each with a defined responsibility.
 
 \begin{enumerate}
-    \item \textbf{Frontend:} Next.js 16 with the App Router, Tailwind CSS v4, Framer Motion and Base UI components. React Flow draws the mindmap. Interaction state is ordinary React state; there is no client store to synchronise.
-    \item \textbf{Backend:} Server Actions and a small number of API routes. Authorisation is checked in the action that performs the write, not in the component that renders the button.
-    \item \textbf{Data:} PostgreSQL with a dedicated, non-owner login role for the application, Supabase Auth for identity, pgvector for embeddings with PostgreSQL full-text search as the fallback, and Supabase Storage for files. Row-Level Security is enabled on every table and protects the browser path; the application's own queries carry an institution predicate explicitly, which is verified by test instead of assumed.
+    \item \textbf{Frontend.} Next.js 16 with the App Router, Tailwind CSS v4, Framer Motion and Base UI components. React Flow renders the mindmap. Interaction state is held in React component state, and no separate client store is maintained.
+    \item \textbf{Backend.} Server Actions and a small number of API routes. Authorisation is enforced in the action that performs a write instead of in the component that renders the control.
+    \item \textbf{Data.} PostgreSQL accessed through a dedicated non-owner login role, Supabase Auth for identity, pgvector for embeddings with PostgreSQL full-text search as the fallback, and Supabase Storage for files. Row-Level Security is enabled on every table and governs access through the browser client. Queries issued by the application carry an explicit institution predicate, and that property is verified by test instead of assumed.
 \end{enumerate}
 
-Figure \ref{fig:system_arch} shows how the pieces connect.
+Figure \ref{fig:system_arch} illustrates the relationship between the components.
 
 \begin{figure}[H]
     \centering
@@ -98,39 +98,41 @@ Figure \ref{fig:system_arch} shows how the pieces connect.
 
 \subsection{Multi-Tenant Onboarding}
 
-Every institution is a tenant. A platform operator creates the institution; a teacher then brings students in by CSV invite or by sharing a batch join code. Two mechanisms keep tenants apart: policies for anything the browser asks for directly, and an explicit institution filter on every query the server runs. The join code is the single sanctioned cross-tenant read, implemented as a database function so that a student can attach to a batch without being able to list batches.
+Each institution constitutes a tenant. An operator account creates the institution, after which a teacher enrols students by CSV invitation or by distributing a batch join code. Two mechanisms maintain separation: policies applied to requests issued directly by the browser, and an explicit institution predicate on every query issued by the server. The join code is the single sanctioned cross-tenant operation, and it is implemented as a database function so that a student may attach to a batch without being able to enumerate batches.
 
-\subsection{Curriculum Arrangement (Teacher Flow)}
+\subsection{Curriculum Arrangement}
 
-The topic tree is created outside the interface, by the seed script that establishes the demo course. Inside the interface a teacher rearranges it: nodes move, edges change, and the layout is saved in one transaction that verifies each node actually belongs to the subject being edited. Assignments can be attached to a topic from the assignments screen. Creating batches, subjects or topics from the UI is planned instead of present.
+The topic structure is created outside the interface, by the seed script that establishes the demonstration course. Within the interface the teacher rearranges it: nodes are moved, edges are modified, and the resulting layout is persisted in a single transaction that verifies the ownership of every node included in the request. Assignments are associated with topics through the assignments screen. Authoring batches, subjects and topics from the interface is planned work and is not present in this build.
 
-\subsection{Learning and Progress Tracking (Student Flow)}
+\subsection{Learning and Progress Tracking}
 
-A student opens the map for a subject and sees three states, not four. Opening a topic moves it to in progress. Marking the last resource done completes it, and a topic with no resources attached cannot complete at all, which prevents a node from being finished by opening it. Each of those actions is written once, on the server, with the student's identity taken from the session instead of from the request body.
+A student opens the map for a subject and is presented with three states. Opening a topic moves it to in progress. Marking the final resource as done completes the topic, and a topic with no resources cannot be completed, which prevents a node from being completed by the act of opening it. Each of these operations is performed once, on the server, with the identity of the student obtained from the session instead of from the request.
 
 \subsection{Dual Progress Tracking}
 
-Two timelines run side by side. The first is the teacher's schedule: which topics have been taught and released. The second is each student's position: which of those they have opened and finished. The class page sorts students into three bands --- \textcolor{green}{\textbf{Progressing}}, \textcolor{yellow}{\textbf{Stuck}} and \textcolor{red}{\textbf{Inactive}} --- from the recency of their recorded events and whether they have completed anything. In this build the event the running application writes is the topic completion; login and resource-view events exist in the seed data, and instrumenting the rest is a small, well-defined next step instead of a design question.
+Two records are maintained in parallel. The first is the teacher's schedule, comprising the topics that have been taught and released. The second is each student's position, comprising the topics that have been opened and completed. The class view classifies students as \textcolor{green}{\textbf{Progressing}}, \textcolor{yellow}{\textbf{Stuck}} or \textcolor{red}{\textbf{Inactive}} according to the recency of recorded events and whether any topic has been completed. In the present implementation the event written by the running application is the topic completion; login and resource-view events are present in the seed data, and extending the instrumentation is a defined task instead of an open design question.
 
-\subsection{AI Study Assistant (RAG Pipeline)}
+\subsection{Retrieval-Augmented Assistant}
 
-A question goes through four steps: (1) the text is embedded and pgvector is searched when an embedding provider is configured, and otherwise PostgreSQL full-text search ranks the chunks, where a query matching nothing returns no context at all instead of a sample of nearby rows; (2) the search is filtered by subject, so only that course's material can be retrieved; (3) the retrieved passages and the question go to Groq, with the passages fenced inside a delimiter generated per request and marked as untrusted, since a PDF can contain text that looks like an instruction; and (4) the answer comes back in one piece. Streaming is a change to the transport, not to the pipeline.
+A question is processed in four stages: (1) the question is embedded and pgvector is queried when an embedding provider is configured; where no provider is configured, PostgreSQL full-text search ranks the passages, and a query that matches nothing returns no context at all instead of a sample of nearby records. (2) the retrieval is restricted to the subject, so that only material belonging to that course can be returned. (3) the retrieved passages and the question are submitted to Groq, with the passages enclosed in a delimiter generated for each request and identified as untrusted, since a document may contain text resembling an instruction. (4) the response is returned in a single reply, where streaming would be a change to the transport and not to the pipeline.
 
 
-\section{Scope and What Comes Next}
+\section{Scope and Remaining Work}
 
-Naming the gaps is more useful than hiding them, and a proposal that lists its own limits is easier to defend than one that does not.
+The limitations of the present implementation are stated below. Each item identifies work that is designed or partially implemented instead of work that is unexamined.
 
 \begin{itemize}
-    \item \textbf{Creating structure from the interface.} Batches, subjects and topics arrive from the seed. Authoring them in the UI, with validation and undo, is the next substantial piece of work.
-    \item \textbf{Teacher-side ingestion.} The upload action and the chunking pipeline exist and are exercised by a re-index script; the panel that would call them from a teacher's session is not wired, so uploaded material is currently a backend capability.
-    \item \textbf{The assistant's surface.} The retrieval and generation path is implemented and unit-tested, including the empty-result case. The chat panel is not mounted on any route yet, which makes the assistant demonstrable through the API instead of through the interface.
-    \item \textbf{Engagement instrumentation.} Only topic completions are written by the running system. Session and resource-view events would sharpen the three bands considerably.
-    \item \textbf{Embeddings in production.} The vector path is implemented and falls back cleanly, but no embedding provider is configured on the deployment, so retrieval currently runs lexically. Swapping in a provider is a configuration change with a re-index, not a rewrite.
-    \item \textbf{Teacher-facing creation of a second subject.} The current interface assumes one subject per batch. A batch selector is needed before a teacher with two courses can use the analytics page honestly.
+    \item \textbf{Authoring from the interface.} Batches, subjects and topics originate in the seed. Creating them from the interface, with validation and reversal, is the next substantial piece of work.
+    \item \textbf{Teacher-side ingestion.} The upload action and the chunking pipeline are implemented and exercised by a re-index script, but the panel through which a teacher would invoke them is not connected, so ingestion is at present a backend capability.
+    \item \textbf{Assistant interface.} The retrieval and generation path is implemented and covered by unit tests, including the case in which no material matches. The chat panel is not mounted on any route, so the assistant is available through the API instead of through the interface.
+    \item \textbf{Event instrumentation.} Only topic completions are written by the running system. Recording sessions and resource views would improve the accuracy of the three engagement categories.
+    \item \textbf{Embeddings in production.} The vector path is implemented and falls back without error, but no embedding provider is configured on the deployed instance, so retrieval currently operates lexically. Configuring a provider requires a re-index and no change to the code.
+    \item \textbf{Multiple subjects per batch.} The interface assumes one subject per batch. A batch selector is required before a teacher with two courses can use the analytics view without ambiguity.
 \end{itemize}
 
 \section{Technologies Used}
+
+
 
 
 

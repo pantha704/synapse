@@ -1,15 +1,33 @@
 \chapter{Introduction}
 
-Learning Management Systems such as Google Classroom, Moodle and Canvas are standard equipment in schools and universities now. They carry lecture notes, collect homework, run quizzes, and hold the gradebook. Their widespread adoption during the COVID-19 pandemic made them unavoidable, but the underlying design has barely moved since the first version: courses are lists, and progress is a column of scores.
+\section{Background}
 
-That design hides more than it shows. A student sees a percentage beside each assignment and still cannot say which topic slipped, or where the understanding broke down. A teacher sees a spreadsheet and cannot say, without opening each row, who is falling behind this month. Learning is closer to a web of connected ideas than to a checklist, and the software does not pretend otherwise.
+Learning management systems such as Google Classroom, Moodle and Canvas are now standard infrastructure in schools and universities. They distribute lecture material, collect assignments, administer quizzes and maintain the gradebook. Their adoption increased sharply during the COVID-19 pandemic, but the underlying model of a course has changed very little: content is presented as a list, and progress is recorded as a column of scores.
 
-Video games solved a version of this problem years ago. A role-playing game shows advancement as a skill tree: a branching diagram where the player can see what is unlocked, what it leads to, and what is still out of reach. The feedback is immediate and spatial, which is why it holds attention. Studies of game-like progress and reward systems report higher engagement and persistence when students can see movement through a structure \cite{deterding2011game}.
+This representation conceals more than it communicates. A student who receives 60\% on an assessment learns the value of the score but not its cause: which topic the question belonged to, which earlier gap it exposed, or what should be studied next. The same information, viewed from the teacher's side, is a spreadsheet of outcomes that records no process, so a student who is falling behind becomes visible mainly when a mark makes the fact unavoidable.
 
-Learning analytics grew out of the same frustration. Instead of recording only the final score, it records how the score came about: time on a topic, sessions per week, the order in which material was opened. Dashboards make that data legible, yet most of them still reach for bar charts and line graphs \cite{schwendimann2017perceiving}. Network and tree layouts remain rare, even when the underlying structure is a network.
+\section{Motivation}
 
-Then there is the language model. It can answer a student's question in two seconds, and it can also invent a citation that does not exist. Retrieval-Augmented Generation reduces the second problem by retrieving passages from a document collection before the model writes anything \cite{lewis2020retrieval}. The answer is then anchored to a source the student can check, which matters more in a course than raw fluency.
+The structure of a course is closer to a network of connected topics than to a checklist, and visual representations of that structure have a long record in educational research. Concept and mind maps are used as study aids precisely because a drawn structure is easier to recall and to inspect than a list. Game interfaces arrived at the same conclusion earlier: a skill tree presents advancement spatially, so a player can see what has been completed, what it leads to, and what remains inaccessible, and studies of game-like progress systems report higher engagement when students can observe movement through a structure \cite{deterding2011game}.
 
-Synapse puts these three threads into one system. The syllabus is an interactive mindmap and progress is tracked on it; a teacher sees a class sorted into progressing, stuck and inactive instead of a sorted list of marks; a student can ask questions that are answered only from the material the teacher supplied. Each institution's data is separated at the database level so the same deployment can serve more than one college.
+Learning analytics developed in response to the same limitation, moving beyond final scores to record time on task, session frequency and the sequence in which material is opened. Dashboards make such data legible, but they remain dominated by bar charts and line graphs, and network or tree layouts are uncommon even when the underlying structure is a network \cite{schwendimann2017perceiving}.
 
-The wager is simple enough to test. If a student can see where they stand and what comes next, they will spend less time guessing. If a teacher can see the shape of the class instead of a column of numbers, they will find the struggling student sooner.
+A third development complicates the picture. Large language models can answer a student's question immediately, and they can also produce an answer that is fluent, plausible and false. Retrieval-Augmented Generation reduces this risk by retrieving passages from a document collection before the model generates a response, so that the answer is grounded in a source the student can consult \cite{lewis2020retrieval}.
+
+\section{Proposed System}
+
+Synapse combines these three threads in a single platform. The syllabus is represented as an interactive mindmap and progress is recorded on it. A teacher is presented with a class grouped into progressing, stuck and inactive categories instead of a list of marks. A student can submit questions that are answered only from material approved for the subject. Records belonging to different institutions are separated at the database level, which allows one deployment to serve more than one college.
+
+\section{Contributions}
+
+The work makes four contributions:
+\begin{enumerate}
+    \item an interface in which the syllabus, instead of a gradebook, is the primary surface for navigation and progress;
+    \item a dual tracking model that records the teacher's delivery and each student's position separately, and compares them at read time;
+    \item a retrieval pipeline constrained to one subject, which declines to answer when the material does not support a response;
+    \item a multi-tenant implementation with row-level policies and explicit tenant predicates, verified by database probes instead of asserted in documentation.
+\end{enumerate}
+
+\section{Organisation of the Report}
+
+Chapter 2 states the problem in terms of students, teachers and institutions. Chapter 3 discusses the significance of the work. Chapter 4 reviews the relevant literature across learning management systems, mind mapping, gamification, learning analytics and retrieval-augmented generation. Chapter 5 describes the architecture and the principal workflows, and states the limitations of the current build. Chapter 6 identifies the research gaps and the response to each. Chapter 7 lists the objectives, and Chapter 8 sets out the work plan.

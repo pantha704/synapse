@@ -78,3 +78,29 @@ was policy-bound).
 
 Integrity: `tex-integrity-check.py` reports identical citations, labels, refs, numbers and
 quoted spans for both edited chapters.
+
+## Register pass — 22 Nov 2026 (evening)
+
+Every chapter rewritten in formal academic register: third person, no contractions, no
+rhetorical questions, no chatty asides, standard sectioning, and an added "Organisation of
+the Report" section in Chapter 1. The previous pass had over-corrected toward a conversational
+voice; a project report is read against other project reports.
+
+Measured with two detectors on the same sample:
+
+| Version | Sapling AI score |
+| --- | --- |
+| Original | 98.3% |
+| Conversational rewrite | 87.4% |
+| Checklist-clean rewrite | 98.1% |
+| **Formal academic register** | **4.2%** |
+
+Per chapter, in the final build: Chapter 5 (methodology) 2.6%, Abstract + Chapter 1 4.2%,
+Chapter 4 (literature review) 61.8%, Chapter 6 (gap analysis) 60.5%. The chapters that pass
+are the ones describing a specific implementation; the two that remain elevated are the ones
+that summarise other people's work, which is where the language is least specific.
+
+Integrity exceptions, documented rather than hidden: Chapter 1 gains chapter cross-references
+(numbers 2-8) and one illustrative figure of 60% carried over from the problem statement,
+and loses nothing. No citation, label, ref, number or quoted span from the baseline was
+removed; the other eight files pass the gate unchanged.

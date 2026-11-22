@@ -1,21 +1,21 @@
 \chapter{Problem Statement}
 
-Nearly every LMS on the market organises a course the same way. Topics become a flat list; progress becomes assignment scores, quiz marks and attendance. At a surface level that is enough to run a course. It is not enough to understand one.
+Most learning management systems in current use organise a course in the same manner. Topics are presented as a flat list, and progress is measured through assignment scores, quiz marks and attendance. This is sufficient to administer a course but insufficient to understand it.
 
-\textbf{From the student's side,} the grade is almost the only feedback that arrives, and it arrives late. A student who scored 60\% on a quiz knows the number but not the cause: which topic the question came from, what it connected to, which earlier gap it exposed. The evidence is scattered over tabs, so assembling a picture takes deliberate effort, and most students do not make it. They feel lost in a course without being able to name the reason.
+\textbf{The student's perspective.} The grade is generally the only feedback a student receives, and it arrives after the work is finished. A student who scores 60\% on a quiz knows the value of the score but not which topic produced it, which earlier concept it depended on, or what should be revised. The evidence is distributed across separate pages, so forming a complete picture requires deliberate effort that most students do not make. The result is a general sense of difficulty without an identifiable cause.
 
-\textbf{From the teacher's side,} a gradebook records outcomes, not processes. It cannot show which students are drifting this week, or which topic confused most of the room on Tuesday. The mark that finally makes the problem visible is usually the one that ends the chance to fix it.
+\textbf{The teacher's perspective.} A gradebook records outcomes and omits process. It does not show which students are falling behind in a given week, nor which topic caused difficulty for the majority of the class. The mark that makes the problem evident is usually the mark that ends the opportunity to address it.
 
-\textbf{Between the two} sits a mismatch nobody can see. A teacher moves through the syllabus at a planned pace. Students do not move in step: some are ahead on one topic and behind on another, and none of that is visible while the course is running. Current tools cannot place the teacher's position on the syllabus next to each student's position, so the gap widens quietly until the final exam reports it.
+\textbf{The gap between delivery and learning.} A teacher proceeds through the syllabus at a planned pace, while students advance unevenly: ahead on one topic, behind on another. Current tools cannot place the teacher's position in the syllabus beside each student's position while the course is running. The discrepancy therefore remains unobserved until a terminal examination reports it.
 
-\textbf{Visual engagement} is a separate issue, and an old one in the literature. Work on visual representations and concept maps finds that structure, drawn instead of listed, supports comprehension and recall \cite{eppler2006comparison}. Most platforms ignore that finding, because text and tables are cheaper to build.
+\textbf{Visual engagement.} Research on visual representation indicates that structure presented diagrammatically supports comprehension and recall more effectively than the same structure presented as text \cite{eppler2006comparison}. Most platforms nonetheless present content as text and tables, a choice driven by implementation cost instead of by evidence.
 
-\textbf{The AI problem} complicates all of it. Chatbots are now common in education and are usually general-purpose: they know a little about everything and nothing about the course in front of the student. Asked about a specific syllabus, such a model can be fluent and wrong at the same time. Without a link to the teacher's approved material, it is a confident stranger in the classroom.
+\textbf{Artificial intelligence.} Chatbots are increasingly used in education, and most of them are general-purpose: they have no connection to a particular syllabus. Asked about course material, such a system may be fluent and incorrect in the same response, and a student has no means of distinguishing the two. Without a constraint to approved material, the tool cannot be relied upon for study.
 
-This research addresses the absence of an LMS that can:
+The problem addressed by this research is therefore the absence of a learning management system that can:
 \begin{enumerate}
-    \item show a student their progress as an interactive mindmap instead of a list of scores;
-    \item let a teacher compare the planned pace of the syllabus with each student's actual position while the course is still running;
-    \item answer student questions only from the teacher's approved material, so an answer outside that material is refused instead of invented;
-    \item serve several institutions from one deployment without mixing their data.
+    \item represent a student's progress as an interactive mindmap instead of a list of scores;
+    \item allow a teacher to compare the planned pace of the syllabus with each student's actual position while the course is in progress;
+    \item answer student questions only from material approved for the subject, and decline to answer otherwise;
+    \item serve several institutions from a single deployment without mixing their records.
 \end{enumerate}

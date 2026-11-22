@@ -1,37 +1,37 @@
 \chapter{Research Gap Identification}
 \label{Research_Gap_Identification}
 
-Chapter 4 assembled the literature. Read together, it points at five gaps, and each one is narrow enough to state plainly and answer with something specific instead of with an adjective.
+The literature reviewed in Chapter 4 identifies five gaps in the treatment of progress, visualisation and assistance in current educational platforms. Each gap is stated below together with the response adopted in the proposed system.
 
-\section{Gap 1: No Visual Progress Mapping in LMS Platforms}
+\section{Absence of Visual Progress Mapping}
 
-Moodle, Canvas and Google Classroom report a course as a list of assignments with numbers beside them. Nothing on the screen shows how topics relate, or where the student stands inside a structure. A dashboard of rows tells a student what they scored; it does not tell them what they skipped.
+Moodle, Canvas and Google Classroom represent a course as a list of assignments with associated scores. The representation conveys the value of a score but not the structure within which the work was performed, and a student cannot determine from it which topics were omitted or how the topics relate to one another.
 
-\textbf{What Synapse does about it:} the list becomes an interactive map. Topics are nodes, the syllabus supplies the edges, and a student can zoom out for the shape of the course or in on one branch. The map shows three states --- not started, in progress, completed --- while the learning-path view derives a fourth, upcoming, for released topics the student has not opened. Both readings come from the same records.
+In response, The list is replaced by an interactive map. Topics are represented as nodes, the syllabus supplies the edges, and the student may view the structure as a whole or examine a single branch. Three states are represented on the map, namely not started, in progress and completed, while the learning-path view derives a fourth state for topics that have been released and not opened. Both renderings are derived from the same records.
 
-\section{Gap 2: No Dual Progress Tracking}
+\section{Absence of Dual Progress Tracking}
 
-Tools record what the teacher covered or what the student scored. Few place the two side by side, so the comparison a teacher needs most, \emph{where the class is against where I am}, is left to memory and instinct. By the time an exam supplies the comparison, the semester is spent.
+Existing instruments record either the material covered by the teacher or the scores obtained by the student. Few present the two together, and the comparison a teacher requires, namely the position of the class relative to the position of the syllabus, is therefore left to recollection. An examination supplies that comparison only when the course is complete.
 
-\textbf{What Synapse does about it:} two timelines are stored separately and compared on read. One is the teacher's delivery; one is each student's position. The comparison produces the gap a teacher actually uses: the topics released but not started by a given student, plus an engagement band for the whole class.
+In response, Two records are maintained separately and compared when read. The first records the teacher's delivery; the second records each student's position. The comparison yields the topics released but not begun by a given student, together with an engagement classification for the class.
 
-\section{Gap 3: Limited Use of Gamification in General-Purpose LMS}
+\section{Limited Application of Gamification}
 
-Gamification has decent evidence behind it, but the products that do it well are specialist apps with one subject and one audience. General-purpose platforms have borrowed the badge and the leaderboard, not the structure. A badge is a reward; a skill tree is a map, and the map is what changes behaviour.
+Gamification has empirical support, but the systems that apply it effectively are specialised applications addressing a single subject and a single audience. General-purpose platforms have adopted badges and leaderboards instead of progression structures. A badge constitutes a reward; a skill tree is a representation of the course, and it is the representation that informs the student's decisions.
 
-\textbf{What Synapse does about it:} the mindmap is already shaped like a skill tree, so the progression mechanic costs nothing extra. Nodes move from not started to in progress to completed as work is done, and the learning-path view adds derived XP, a level per hundred points and badges at the first, fifth, tenth and twenty-fifth completed topic.
+In response, The mindmap already has the form of a skill tree, so the progression mechanic requires no additional structure. Nodes move from not started to in progress and to completed as work is performed, and the learning-path view derives experience points, a level for each hundred points, and badges at the first, fifth, tenth and twenty-fifth completed topic.
 
-\section{Gap 4: AI Assistants Without Curriculum Scope Control}
+\section{Absence of Curriculum Scope Control}
 
-A general chatbot answers from everything it was trained on, which is the wrong corpus for a course. It can be right about the subject and wrong about the syllabus in the same paragraph, and a student has no way to tell which half is which.
+A general-purpose assistant answers from the corpus on which it was trained, which is not the corpus of a course. Such a system may be correct about the subject and incorrect about the syllabus within the same response, and the student has no means of distinguishing the two.
 
-\textbf{What Synapse does about it:} retrieval is scoped to one subject at query time. Chunks are filtered by subject id, so the model can only see documents attached to that course, and a question whose terms match nothing in the index is answered with an explicit "the material does not cover this" instead of a plausible guess. The retrieval and generation path is implemented and tested; mounting the chat surface is the remaining step.
+In response, Retrieval is restricted to one subject at query time. Passages are filtered by subject identifier, so the model can only be supplied with documents associated with that course, and a question whose terms match no indexed material receives an explicit statement that the material does not address it. The retrieval and generation path is implemented and tested; mounting the interface is the remaining step.
 
-\section{Gap 5: Lack of Multi-Tenant Support in EdTech Platforms}
+\section{Limited Multi-Tenant Support}
 
-Most platforms assume one institution. Serving several schools from one installation usually means either separate deployments or a shared database with a tenant column nobody enforces. The second is the dangerous one: it looks like multi-tenancy until someone forgets a \texttt{where} clause.
+Most platforms assume a single institution. Serving several institutions from one installation requires either separate deployments or a shared database with a tenant column that is not enforced. The second arrangement is the more hazardous, since it resembles multi-tenancy until a query omits its tenant predicate.
 
-\textbf{What Synapse does about it:} Row-Level Security is enabled on every table and tenant-scoped policies cover the browser path, where the role holds read access only. Application queries run as a dedicated non-owner role and carry the institution predicate explicitly, which is the part that has to be reviewed; a test asserts that two tenants' subjects partition the table exactly, that curriculum writes are refused, and that anonymous reads are refused.
+In response, Row-Level Security is enabled on every table and tenant-scoped policies govern access through the browser client, where the role holds read access only. Application queries are issued through a dedicated non-owner role and carry an explicit institution predicate, which is the property that requires review. A test asserts that the subjects of two institutions partition the table exactly, that writes to curriculum tables are refused, and that anonymous reads are refused.
 
 \section{Summary of Research Gaps}
 
