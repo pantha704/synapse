@@ -6,6 +6,9 @@ import { TopNavBar } from "@/components/layout/TopNavBar";
 import { StudentStatusCard, EngagementSummary } from "@/components/analytics/StudentStatusCard";
 import type { StudentEngagement, EngagementStatus } from "@/app/actions/engagement-actions";
 
+// DB-backed page: never prerender at build time
+export const dynamic = "force-dynamic";
+
 // Mock data for demonstration (replace with real DB calls)
 const mockStudents: StudentEngagement[] = [
   { studentId: "1", studentName: "Alex Rivers", email: "alex@test.com", status: "progressing", lastActive: new Date(), eventCount7d: 24, topicsCompleted: 5, progressPercent: 85 },

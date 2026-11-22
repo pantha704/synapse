@@ -7,6 +7,9 @@ import { StudentMindmapClient } from './student-mindmap-client';
 import { StudentProgress, StudentResourceProgress, TopicNode as PrismaTopicNode } from '@prisma/client';
 import { createClient } from '@/utils/supabase/server';
 
+// DB-backed page: never prerender at build time
+export const dynamic = "force-dynamic";
+
 export default async function StudentSubjectMindmapPage({
   params
 }: {

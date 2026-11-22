@@ -43,13 +43,24 @@ export function TopicSidePanel({
   const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
-    if (isOpen && topicId) {
+    if (!isOpen || !topicId) return;
+    let cancelled = false;
+
+    void (async () => {
       setIsLoading(true);
-      fetchResources(topicId)
-        .then(setResources)
-        .catch(() => toast.error("Failed to load resources"))
-        .finally(() => setIsLoading(false));
-    }
+      try {
+        const resourceList = await fetchResources(topicId);
+        if (!cancelled) setResources(resourceList);
+      } catch {
+        if (!cancelled) toast.error("Failed to load resources");
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [isOpen, topicId, fetchResources]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

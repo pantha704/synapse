@@ -22,7 +22,7 @@ export function MindmapClient({ subjectId, subjectName, initialNodes, initialEdg
         <div>
           <h1 className="text-2xl font-bold">{subjectName} Mindmap</h1>
           <p className="text-sm text-muted-foreground">
-            Drag nodes to organize the curriculum. Click "Save Layout" when done.
+            Drag nodes to organize the curriculum. Click &ldquo;Save Layout&rdquo; when done.
           </p>
         </div>
       </div>

@@ -8,6 +8,9 @@ import { learningNodes, peerComparisonData, studentStats } from "@/data/mockData
 import { motion } from "framer-motion";
 import { Calendar, Clock, CheckCircle2, Download, Send } from "lucide-react";
 
+// DB-backed page: never prerender at build time
+export const dynamic = "force-dynamic";
+
 const activityIcons: Record<string, typeof CheckCircle2> = {
   completed: CheckCircle2,
   downloaded: Download,
