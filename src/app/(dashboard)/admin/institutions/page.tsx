@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/utils/supabase/server";
+import { redirect } from "next/navigation";
 import { CreateInstitutionForm } from "./create-form";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +13,12 @@ export default async function InstitutionsPage() {
 
   const me = user ? await prisma.user.findUnique({ where: { supabaseId: user.id } }) : null;
 
+  if (!me) redirect("/no-access");
+
+  // The nav hides this link, but the route is reachable by URL: without this
+  // check any signed-in student could read every tenant's name and headcount.
   const institutions = await prisma.institution.findMany({
+    where: me.isSuperAdmin ? {} : { id: me.institutionId },
     orderBy: { name: "asc" },
     include: { _count: { select: { users: true, batches: true, subjects: true } } },
   });

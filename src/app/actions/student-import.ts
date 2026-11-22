@@ -52,11 +52,11 @@ export async function importStudentsCsv(csv: string, batchId: string): Promise<I
     try {
       let supabaseId: string | null = null;
 
-      const { data, error } = await admin.auth.admin.createUser({
-        email: row.email,
-        password: randomBytes(12).toString("hex"),
-        email_confirm: true,
-        user_metadata: { name: row.name, role: "STUDENT" },
+      // createUser with a random password locked every imported student out:
+      // the account existed, nobody knew the password, and no mail was sent.
+      const { data, error } = await admin.auth.admin.inviteUserByEmail(row.email, {
+        data: { name: row.name, role: "STUDENT" },
+        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://synapse-10ue.onrender.com"}/auth/callback?next=/student`,
       });
 
       if (error) {
@@ -69,6 +69,11 @@ export async function importStudentsCsv(csv: string, batchId: string): Promise<I
         created += 1;
       }
       if (!supabaseId) throw new Error("no auth id returned");
+
+      const existingUser = await prisma.user.findUnique({ where: { supabaseId } });
+      if (existingUser && existingUser.institutionId !== batch.institutionId) {
+        throw new Error("already belongs to another institution");
+      }
 
       const dbUser = await prisma.user.upsert({
         where: { supabaseId },

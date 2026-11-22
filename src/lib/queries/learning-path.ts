@@ -420,15 +420,26 @@ export async function getAdminOverview() {
     prisma.user.count({ where: { ...where, role: "STUDENT" } }),
     prisma.user.count({ where: { ...where, role: "TEACHER" } }),
     prisma.batch.count({ where }),
-    prisma.studentProgress.count({ where: { status: "COMPLETED" } }),
-    prisma.studentProgress.count(),
+    prisma.studentProgress.count({
+      where: { status: "COMPLETED", student: { institutionId: user.institutionId } },
+    }),
+    prisma.studentProgress.count({ where: { student: { institutionId: user.institutionId } } }),
   ]);
+
+  // Rows that exist are not the same as work that could be done: a class where
+  // one student touched one topic reads 100% on a row ratio.
+  const topics = await prisma.topicNode.count({ where: { subject: { institutionId: user.institutionId } } });
+  const opportunity = students * topics;
 
   return {
     students,
     teachers,
     batches,
-    avgCompletion: totalRows ? Math.round((completedRows / totalRows) * 100) : 0,
+    avgCompletion: opportunity
+      ? Math.min(100, Math.round((completedRows / opportunity) * 100))
+      : totalRows
+        ? Math.round((completedRows / totalRows) * 100)
+        : 0,
   };
 }
 
@@ -468,15 +479,24 @@ export async function getClassReport(): Promise<{ batchName: string; rows: Class
   ]);
 
   const now = Date.now();
+  const inBatch = new Set(topicIds);
   const rows: ClassReportRow[] = batch.students.map(({ student }) => {
-    const mine = progress.filter((p) => p.studentId === student.id);
+    // a student in two batches has completions outside this one; counting them
+    // produced >100% on a report that only lists this batch's topics
+    const mine = progress.filter((p) => p.studentId === student.id && inBatch.has(p.topicId));
     const completed = mine.filter((p) => p.status === "COMPLETED").length;
     const percent = topicIds.length ? Math.round((completed / topicIds.length) * 100) : 0;
     const last = events.find((e) => e.studentId === student.id);
     const daysSince = last ? (now - asDate(last.createdAt).getTime()) / DAY_MS : Infinity;
     // three tiers, as the report describes them
-    const tier: ClassReportRow["tier"] =
-      daysSince <= 7 && completed > 0 ? "Progressing" : daysSince <= 14 ? "Stuck" : "Inactive";
+    const finished = topicIds.length > 0 && completed >= topicIds.length;
+    const tier: ClassReportRow["tier"] = finished
+      ? "Progressing"
+      : daysSince <= 7 && completed > 0
+        ? "Progressing"
+        : daysSince <= 14
+          ? "Stuck"
+          : "Inactive";
     return {
       studentId: student.id,
       name: student.name ?? student.email.split("@")[0],

@@ -50,7 +50,7 @@ export function StudentMindmapClient({
 
   const handleMarkComplete = async (resourceId: string) => {
     if (!panelState.topicId) return;
-    await markResourceCompleteAction(studentId, resourceId, panelState.topicId, subjectId);
+    await markResourceCompleteAction(resourceId, panelState.topicId, subjectId);
   };
 
   return (

@@ -36,9 +36,24 @@ async function getDashboardData(): Promise<DashboardData> {
   // Aggregate data to find total subjects taught
   const totalSubjects = teacher.taughtBatches.reduce((acc, b) => acc + b._count.subjects, 0);
 
-  // For real avgProgress, we would calculate logic based on students.
-  // Using 0 as default since it could be heavy.
-  const avgProgress = 0;
+  // completed topics / (students x topics) across the batches this teacher owns.
+  // A row ratio would read 100% after a single completion, so the denominator is
+  // the work that could be done, not the work that was recorded.
+  const batchIds = teacher.taughtBatches.map((b) => b.id);
+  const [topics, students, completed] = await Promise.all([
+    prisma.topicNode.count({
+      where: { subject: { batches: { some: { batchId: { in: batchIds } } } } },
+    }),
+    prisma.batchStudent.count({ where: { batchId: { in: batchIds } } }),
+    prisma.studentProgress.count({
+      where: {
+        status: "COMPLETED",
+        topic: { subject: { batches: { some: { batchId: { in: batchIds } } } } },
+      },
+    }),
+  ]);
+  const opportunity = students * topics;
+  const avgProgress = opportunity ? Math.min(100, Math.round((completed / opportunity) * 100)) : 0;
 
   return {
     activeBatches,

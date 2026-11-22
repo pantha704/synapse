@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import { EventType } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
+import { createClient } from '@/utils/supabase/server';
 
 // ─── Event Logging ───────────────────────────────────────────────
 
@@ -38,6 +39,28 @@ export interface StudentEngagement {
 }
 
 export async function getBatchEngagement(batchId: string): Promise<StudentEngagement[]> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("UNAUTHENTICATED");
+
+  const me = await prisma.user.findUnique({ where: { supabaseId: user.id } });
+  if (!me) throw new Error("NO_ACCOUNT");
+
+  // a batch id is guessable and the action is public: the caller must own it,
+  // be an admin in its institution, or be enrolled in it
+  const batch = await prisma.batch.findFirst({
+    where: {
+      id: batchId,
+      OR: [
+        { teacherId: me.id },
+        ...(me.role === "ADMIN" ? [{ institutionId: me.institutionId }] : []),
+        { students: { some: { studentId: me.id } } },
+      ],
+    },
+    select: { id: true },
+  });
+  if (!batch) throw new Error("FORBIDDEN");
+
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
 
@@ -57,8 +80,11 @@ export async function getBatchEngagement(batchId: string): Promise<StudentEngage
     }
   });
 
-  // Get total topics for progress calculation
-  const totalTopics = await prisma.topicNode.count();
+  // topics taught in this batch only — a global count made every percentage
+  // collapse toward zero as other tenants added curriculum
+  const totalTopics = await prisma.topicNode.count({
+    where: { subject: { batches: { some: { batchId } } } },
+  });
 
   return batchStudents.map(({ student }) => {
     const events = student.engagementEvents;

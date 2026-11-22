@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+import { createClient } from '@/utils/supabase/server';
 import { Node, Edge } from '@xyflow/react';
 import { MindmapClient } from './mindmap-client';
 import { TopicNodeData } from '@/components/canvas/topic-node';
@@ -16,8 +17,20 @@ export default async function TeacherSubjectMindmapPage({
   const resolvedParams = await params;
   const { subjectId } = resolvedParams;
 
-  const subject = await prisma.subject.findUnique({
-    where: { id: subjectId },
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const me = await prisma.user.findUnique({ where: { supabaseId: user.id } });
+  if (!me) redirect("/no-access");
+  if (me.role !== "TEACHER" && me.role !== "ADMIN") notFound();
+
+  // findUnique on the id alone would hand any signed-in user another tenant's
+  // curriculum by editing the URL; the institution is part of the key.
+  const subject = await prisma.subject.findFirst({
+    where: { id: subjectId, institutionId: me.institutionId },
     include: {
       topicNodes: true,
     }

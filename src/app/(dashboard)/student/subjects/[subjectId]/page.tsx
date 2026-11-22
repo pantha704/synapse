@@ -37,8 +37,12 @@ export default async function StudentSubjectMindmapPage({
 
   const studentId = student.id;
 
-  const subject = await prisma.subject.findUnique({
-    where: { id: subjectId },
+  const subject = await prisma.subject.findFirst({
+    where: {
+      id: subjectId,
+      institutionId: student.institutionId,
+      batches: { some: { batch: { students: { some: { studentId: student.id } } } } },
+    },
     include: {
       topicNodes: true,
     }

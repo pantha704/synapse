@@ -247,3 +247,20 @@ begin
     raise exception 'RLS is disabled on: %', offenders;
   end if;
 end $$;
+
+-- ─── Column-level grants ──────────────────────────────────────────────
+-- Row policies alone let a user rewrite their own role, institution_id and
+-- is_super_admin, which is privilege escalation through PostgREST. The row
+-- filter says "your row"; these grants say "which columns of it".
+revoke update on public.users from authenticated, anon;
+grant update (name, avatar_url) on public.users to authenticated;
+
+-- anon ships in the browser bundle. It needs no direct table access at all.
+revoke insert, update, delete, truncate on all tables in schema public from anon;
+revoke select on all tables in schema public from anon;
+
+-- revoking from `anon` does not remove PUBLIC's default EXECUTE grant.
+revoke all on function public.join_batch_by_code(text) from public, anon;
+revoke all on function public.current_institution_id() from public, anon;
+revoke all on function public.current_user_id() from public, anon;
+grant execute on function public.join_batch_by_code(text) to authenticated, synapse_app;
