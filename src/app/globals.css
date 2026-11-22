@@ -148,3 +148,30 @@
     border-radius: var(--radius-sm);
   }
 }
+
+/* The class report is designed to be printed to A4. The dashboard shell is
+   h-screen with an inner scroll container, so without this the sidebar prints
+   and everything below the first viewport is dropped. */
+@media print {
+  aside,
+  header {
+    display: none !important;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    color: #111 !important;
+  }
+
+  main {
+    height: auto !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .print\\:hidden {
+    display: none !important;
+  }
+}
