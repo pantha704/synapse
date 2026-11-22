@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { createClient } from "@/utils/supabase/server";
 import type {
   AnnouncementItem,
+  AssignmentItem,
   BatchPulse,
   CriticalNode,
   LearningNode,
@@ -68,6 +69,7 @@ export async function getStudentPath(): Promise<{
   peers: PeerComparison[];
   currentStudentId: string;
   announcements: AnnouncementItem[];
+  assignments: AssignmentItem[];
   batchId: string | null;
 }> {
   const user = await currentDbUser();
@@ -78,6 +80,7 @@ export async function getStudentPath(): Promise<{
       peers: [],
       currentStudentId: "",
       announcements: [],
+      assignments: [],
       batchId: null,
     };
 
@@ -106,6 +109,7 @@ export async function getStudentPath(): Promise<{
       peers: [],
       currentStudentId: "",
       announcements: [],
+      assignments: [],
       batchId: null,
     };
   }
@@ -219,8 +223,29 @@ export async function getStudentPath(): Promise<{
       })
     : [];
 
+  const assignmentRows = batchIds.length
+    ? await prisma.assignment.findMany({
+        where: { batchId: { in: batchIds } },
+        include: {
+          topic: { select: { title: true } },
+          submissions: { where: { studentId: student.id } },
+        },
+        orderBy: { createdAt: "desc" },
+        take: 10,
+      })
+    : [];
+
   return {
     nodes,
+    assignments: assignmentRows.map((a) => ({
+      id: a.id,
+      title: a.title,
+      instructions: a.instructions,
+      topicTitle: a.topic?.title ?? null,
+      dueAt: a.dueAt ? asDate(a.dueAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : null,
+      status: a.submissions[0]?.status ?? "NOT_STARTED",
+      note: a.submissions[0]?.note ?? null,
+    })),
     announcements: announcements.map((a) => ({
       id: a.id,
       title: a.title,
@@ -246,6 +271,7 @@ export async function getTeacherPath(): Promise<{
   batchPulse: BatchPulse;
   criticalNodes: CriticalNode[];
   announcements: AnnouncementItem[];
+  assignments: AssignmentItem[];
   batchId: string | null;
 }> {
   const user = await currentDbUser();
@@ -255,7 +281,8 @@ export async function getTeacherPath(): Promise<{
     period: "vs last week",
     weeklyData: [0, 0, 0, 0, 0, 0, 0],
   };
-  if (!user) return { nodes: [], batchPulse: empty, criticalNodes: [], announcements: [], batchId: null };
+  if (!user)
+    return { nodes: [], batchPulse: empty, criticalNodes: [], announcements: [], assignments: [], batchId: null };
 
   const teacher = await prisma.user.findUnique({
     where: { id: user.id },
@@ -270,7 +297,7 @@ export async function getTeacherPath(): Promise<{
     },
   });
   if (!teacher || teacher.taughtBatches.length === 0) {
-    return { nodes: [], batchPulse: empty, criticalNodes: [], announcements: [], batchId: null };
+    return { nodes: [], batchPulse: empty, criticalNodes: [], announcements: [], assignments: [], batchId: null };
   }
 
   const batch = teacher.taughtBatches[0];
@@ -327,8 +354,29 @@ export async function getTeacherPath(): Promise<{
     take: 5,
   });
 
+  const assignmentRows = await prisma.assignment.findMany({
+    where: { batchId: batch.id },
+    include: {
+      topic: { select: { title: true } },
+      submissions: { select: { status: true } },
+    },
+    orderBy: { createdAt: "desc" },
+    take: 10,
+  });
+
   return {
     nodes,
+    assignments: assignmentRows.map((a) => ({
+      id: a.id,
+      title: a.title,
+      instructions: a.instructions,
+      topicTitle: a.topic?.title ?? null,
+      dueAt: a.dueAt ? asDate(a.dueAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : null,
+      status: "NOT_STARTED" as const,
+      note: null,
+      submittedCount: a.submissions.filter((x) => x.status !== "NOT_STARTED").length,
+      studentCount: studentIds.length,
+    })),
     batchId: batch.id,
     announcements: announcements.map((a) => ({
       id: a.id,

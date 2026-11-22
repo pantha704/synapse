@@ -55,3 +55,17 @@ export interface AnnouncementItem {
   createdAt: string;
   read: boolean;
 }
+
+export type AssignmentState = "NOT_STARTED" | "SUBMITTED" | "GRADED";
+
+export interface AssignmentItem {
+  id: string;
+  title: string;
+  instructions: string | null;
+  topicTitle: string | null;
+  dueAt: string | null;
+  status: AssignmentState;
+  note: string | null;
+  submittedCount?: number;
+  studentCount?: number;
+}
