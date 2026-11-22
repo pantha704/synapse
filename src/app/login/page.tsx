@@ -103,9 +103,11 @@ export default function LoginPage() {
         <Card className="bg-[hsl(220,15%,10%)]/80 border-white/[0.06] backdrop-blur-xl shadow-2xl">
           <CardHeader className="space-y-1 pb-4">
             <CardTitle className="text-xl text-white text-center">
-              {mode === "login" ? "Welcome back" : "Create your account"}
+              <h1 className="text-xl font-semibold tracking-tight">
+                {mode === "login" ? "Welcome back" : "Create your account"}
+              </h1>
             </CardTitle>
-            <CardDescription className="text-center text-white/50">
+            <CardDescription className="text-center text-white/65">
               {mode === "login"
                 ? "Sign in to continue learning"
                 : "Join your class in seconds"}
@@ -251,7 +253,7 @@ export default function LoginPage() {
                   setMode(mode === "login" ? "signup" : "login");
                   setError(null);
                 }}
-                className="text-sm text-white/40 hover:text-white/60 transition-colors"
+                className="text-sm text-white/70 hover:text-white transition-colors"
               >
                 {mode === "login"
                   ? "Don't have an account? Sign up"
