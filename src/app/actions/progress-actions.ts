@@ -304,7 +304,7 @@ export async function getClassRankings(batchId: string) {
     return {
       studentId: student.supabaseId,
       studentName: student.name || 'Anonymous',
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${student.email}`,
+      avatar: null,
       progress: progressPercent,
       email: student.email
     };

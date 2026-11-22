@@ -13,7 +13,8 @@ export interface LearningNode {
 export interface PeerComparison {
   studentId: string;
   studentName: string;
-  avatar: string;
+  /** uploaded avatar, or null — the UI renders initials, never a remote service */
+  avatar: string | null;
   progress: number;
   rank: number;
   weeklyChange: number;

@@ -1,6 +1,7 @@
 "use client";
 
 import type { StudentEngagement, EngagementStatus } from "@/app/actions/engagement-actions";
+import { InitialsAvatar } from "@/components/ui/initials-avatar";
 import { TrendingUp, AlertTriangle, Clock, CheckCircle2 } from "lucide-react";
 
 const statusConfig: Record<EngagementStatus, { color: string; bg: string; icon: typeof CheckCircle2; label: string }> = {
@@ -40,10 +41,10 @@ export function StudentStatusCard({ student }: StudentStatusCardProps) {
     <div className={`rounded-xl border p-4 ${config.bg} transition-all hover:shadow-md`}>
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
-          <img
-            src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${student.email}`}
-            alt={student.studentName || "Student"}
-            className="w-10 h-10 rounded-full"
+          <InitialsAvatar
+            name={student.studentName}
+            seed={student.studentId}
+            className="size-10"
           />
           <div>
             <h4 className="text-sm font-semibold text-gray-900">{student.studentName || "Anonymous"}</h4>

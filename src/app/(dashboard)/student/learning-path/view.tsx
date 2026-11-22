@@ -1,5 +1,6 @@
 "use client";
 
+import { InitialsAvatar } from "@/components/ui/initials-avatar";
 import { AcademicLearningPath } from "@/components/path/AcademicLearningPath";
 import { PeerComparisonPanel } from "@/components/student/PeerComparisonPanel";
 import { motion } from "framer-motion";
@@ -45,7 +46,7 @@ export function StudentPathView({ nodes, stats, peers, currentStudentId, announc
         <aside className="w-80 bg-[hsl(220,15%,10%)]/60 border-l border-white/[0.06] p-5 overflow-y-auto space-y-5">
           <div className="text-center pb-4 border-b border-white/[0.06]">
             <div className="w-12 h-12 rounded-full overflow-hidden mx-auto mb-2 border-2 border-violet-400/40">
-              <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(stats.name)}`} alt={stats.name} className="w-full h-full object-cover" />
+              <InitialsAvatar name={stats.name} seed={stats.name} className="size-full" textClassName="text-lg" />
             </div>
             <h3 className="text-sm font-bold text-white">{stats.name}</h3>
             <p className="text-xs text-white/60">{stats.title}</p>

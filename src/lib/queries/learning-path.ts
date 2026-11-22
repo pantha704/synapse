@@ -189,7 +189,7 @@ export async function getStudentPath(): Promise<{
       return {
         studentId: c.student.id,
         studentName: c.student.name ?? c.student.email.split("@")[0],
-        avatar: c.student.avatarUrl ?? `https://api.dicebear.com/7.x/avataaars/svg?seed=${c.student.id}`,
+        avatar: c.student.avatarUrl ?? null,
         progress,
         rank: 0,
         // ponytail: no rank-history table yet, so report 0 rather than invent a delta
