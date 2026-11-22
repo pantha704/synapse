@@ -27,6 +27,7 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const isAuthRoute =
+    request.nextUrl.pathname.startsWith("/api/health") ||
     request.nextUrl.pathname.startsWith("/login") ||
     request.nextUrl.pathname.startsWith("/auth") ||
     request.nextUrl.pathname === "/" ||
