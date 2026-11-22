@@ -8,7 +8,7 @@
 -- dedicated non-owner login role. Otherwise isolation stays application-level.
 --
 -- Two id types exist in this schema and the old policy file conflated them:
---   users.supabase_id = the Supabase auth uuid (what auth.uid() returns)
+--   users.supabase_id = the Supabase auth uuid (what auth.uid()::text returns)
 --   users.id          = the app's cuid (what student_id / teacher_id store)
 --
 -- Generated: 2026-11-20 (replaces the permissive USING (true) policies)
@@ -18,14 +18,22 @@ create or replace function public.current_institution_id()
 returns text
 language sql stable security definer set search_path = public
 as $$
-  select institution_id from users where supabase_id = auth.uid() limit 1;
+  -- read the JWT subject as text: seeded/demo rows may not be valid uuids and
+  -- auth.uid() would raise instead of returning null
+  select u.institution_id
+  from users u
+  where u.supabase_id = nullif(current_setting('request.jwt.claims', true), '')::json ->> 'sub'
+  limit 1;
 $$;
 
 create or replace function public.current_user_id()
 returns text
 language sql stable security definer set search_path = public
 as $$
-  select id from users where supabase_id = auth.uid() limit 1;
+  select u.id
+  from users u
+  where u.supabase_id = nullif(current_setting('request.jwt.claims', true), '')::json ->> 'sub'
+  limit 1;
 $$;
 
 revoke all on function public.current_institution_id() from anon;
@@ -72,7 +80,7 @@ create policy institution_read on institutions for select to authenticated
 
 create policy institution_admin_update on institutions for update to authenticated
   using (id = public.current_institution_id()
-         and exists (select 1 from users u where u.supabase_id = auth.uid() and u.role = 'ADMIN'))
+         and exists (select 1 from users u where u.supabase_id = nullif(current_setting('request.jwt.claims', true), '')::json ->> 'sub' and u.role = 'ADMIN'))
   with check (id = public.current_institution_id());
 
 -- ─── Users ────────────────────────────────────────────────────────────
@@ -80,7 +88,8 @@ create policy users_read on users for select to authenticated
   using (institution_id = public.current_institution_id());
 
 create policy users_self_update on users for update to authenticated
-  using (supabase_id = auth.uid()) with check (supabase_id = auth.uid());
+  using (supabase_id = nullif(current_setting('request.jwt.claims', true), '')::json ->> 'sub')
+  with check (supabase_id = nullif(current_setting('request.jwt.claims', true), '')::json ->> 'sub');
 
 -- ─── Batches ──────────────────────────────────────────────────────────
 create policy batches_read on batches for select to authenticated
@@ -198,3 +207,17 @@ $$;
 
 revoke all on function public.join_batch_by_code(text) from anon;
 grant execute on function public.join_batch_by_code(text) to authenticated;
+
+-- ─── Server role access ───────────────────────────────────────────────
+-- Prisma connects as `synapse_app`. Supabase's service_role gets this by
+-- BYPASSRLS; a plain login role cannot, so it gets an explicit policy instead.
+-- The browser path (anon / authenticated) stays tenant-scoped by the policies
+-- above — this only widens what the trusted server connection may do.
+do $$
+declare t record;
+begin
+  for t in select tablename from pg_tables where schemaname = 'public' loop
+    execute format('drop policy if exists app_service_access on public.%I', t.tablename);
+    execute format('create policy app_service_access on public.%I to synapse_app using (true) with check (true)', t.tablename);
+  end loop;
+end $$;
