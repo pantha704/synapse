@@ -217,6 +217,11 @@ do $$
 declare t record;
 begin
   for t in select tablename from pg_tables where schemaname = 'public' loop
+    -- RLS must be on before any policy means anything. Enabling it here, for every
+    -- table that exists, is what stops a new migration from shipping a world-readable
+    -- table: the four tables added by migrations 1 and 2 were readable with the anon
+    -- key until this loop covered them.
+    execute format('alter table public.%I enable row level security', t.tablename);
     execute format('drop policy if exists app_service_access on public.%I', t.tablename);
     execute format('create policy app_service_access on public.%I to synapse_app using (true) with check (true)', t.tablename);
   end loop;
@@ -226,3 +231,19 @@ end $$;
 -- and any scoped query run. authenticated carries only SELECT grants + policies.
 grant authenticated to synapse_app;
 grant anon to synapse_app;
+
+-- ─── Guard ────────────────────────────────────────────────────────────
+-- A table with RLS off is readable by anyone holding the anon key, which ships
+-- in the browser bundle. Refuse to finish quietly in that state.
+do $$
+declare offenders text;
+begin
+  select string_agg(c.relname, ', ')
+    into offenders
+  from pg_class c join pg_namespace n on n.oid = c.relnamespace
+  where n.nspname = 'public' and c.relkind = 'r' and not c.relrowsecurity;
+
+  if offenders is not null then
+    raise exception 'RLS is disabled on: %', offenders;
+  end if;
+end $$;

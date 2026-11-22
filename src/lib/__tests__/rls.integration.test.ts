@@ -61,6 +61,19 @@ suite("tenant isolation (live database)", () => {
     expect(a === 0 || b === 0 || a + b === rows[0].n).toBe(true);
   });
 
+  it("enables RLS on every public table", async () => {
+    // a table with RLS off is readable by anyone holding the anon key, which is
+    // shipped to the browser — this caught announcements, announcement_reads,
+    // assignments and assignment_submissions, all added after the RLS script
+    const { rows } = await client.query<{ relname: string }>(
+      `select c.relname
+         from pg_class c join pg_namespace n on n.oid = c.relnamespace
+        where n.nspname = 'public' and c.relkind = 'r' and not c.relrowsecurity
+        order by c.relname`
+    );
+    expect(rows.map((r) => r.relname)).toEqual([]);
+  });
+
   it("returns nothing for a caller with no valid subject", async () => {
     expect(await visibleSubjects("00000000-0000-0000-0000-000000000000")).toBe(0);
   });
