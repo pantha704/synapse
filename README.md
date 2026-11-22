@@ -1,77 +1,77 @@
 # Synapse 🧠
 
-Synapse (formerly MindMapClass) is a multi-tenant academic progress platform that reimagines learning via progress tracking and visualization. Designed to bridge the gap between "what a teacher teaches" and "what a student learns", Synapse combines Google Classroom's role management with an interactive and pannable mindmap visualization. 
+Synapse (formerly MindMapClass) is a multi-tenant academic progress platform. It answers one
+question that a gradebook answers badly: *where is this class, and where is this student,
+right now?* The curriculum is drawn as an interactive mindmap, and both the teacher's
+delivery and each student's own progress are tracked against it.
 
-## 🌟 Core Value
-Students and teachers can view their entire curriculum journey as a living, interactive mindmap—making academic progress tangible, visual, and engaging, similar to unlocking a skill tree in a game!
+## What is actually built
 
-## ⚙️ Local Setup
+| Area | Status |
+| --- | --- |
+| Multi-tenant data model (institution → batch → subject → topic) | Built |
+| Row-Level Security on every table, verified by a cross-tenant probe | Built |
+| React Flow mindmap, teacher-built, student-pannable | Built |
+| Dual progress: `TeacherProgress` + `StudentProgress` | Built |
+| Node states: not started → upcoming → in progress → completed | Built (`upcoming` is derived) |
+| Three-tier engagement bands (Progressing / Stuck / Inactive) | Built |
+| Announcements, assignments + submissions, CSV onboarding | Built |
+| Derived XP, levels and badges | Built |
+| Subject-scoped RAG chat + PDF ingestion | Built, with the caveats below |
+| Class progress report (print → PDF) | Built |
+| Per-student heatmap painted onto the canvas | **Not built** |
+
+## Local setup
 
 ```bash
-cp .env.example .env.local     # fill Supabase + Groq values
-npm install                    # runs prisma generate
-npm run db:push                # create tables
-psql "$DATABASE_URL" -f scripts/setup-rls.sql   # row-level security
-npm run seed                   # demo tenant (optional)
+cp .env.example .env.local          # Supabase URL, anon + service keys, DATABASE_URL, GROQ_API_KEY
+npm install                         # runs prisma generate
+npx prisma migrate deploy           # apply migrations 1..4
+psql "$DATABASE_URL" -f scripts/setup-rls.sql
+npm run seed                        # demo tenant with real Supabase auth users
 npm run dev
 ```
 
-Checks: `npm run typecheck` · `npm run lint` · `npm run build` (all run in CI).
+Demo accounts created by the seed — password `SynapseDemo2026!`:
 
-## 🚀 Key Features (In Development)
+| account | role |
+| --- | --- |
+| `teacher@demo.synapse.dev` | TEACHER (1 batch, 8 topics, 10 students) |
+| `student1@demo.synapse.dev` … `student10@` | STUDENT |
+| `admin@demo.synapse.dev` | ADMIN + platform operator |
 
-- **Multi-tenant Architecture:** Completely isolated workspaces for distinct schools or institutions.
-- **Role-based Access:** Dedicated spaces and workflows for Admins, Teachers, and Students.
-- **Interactive Mindmap Canvas:** A pannable and zoomable visual view of courses where nodes represent chapters and sub-topics.
-- **Game-like Progression Tracking:** Watch nodes change state (locked → upcoming → in-progress → completed) to reflect learning progress.
-- **Dual Tracking:** Progress measured from the Teacher's delivery versus the Student's actual understanding.
-- **AI-Powered Learning Assistant:** Context-aware, subject-scoped AI chat powered by Groq and NVIDIA NIM using RAG over uploaded curriculum resources. 
-- **Teacher & Admin Dashboards:** Actionable analytics, heatmaps, and silent engagement tracking without friction for students.
+Checks: `npm run typecheck` · `npm run lint` · `npm test` · `npm run build` — all four run in CI.
+`npm run test:rls` runs the tenant-isolation suite against a live database.
 
-## 🛠 Tech Stack
-
-- **Framework:** Next.js 16 (App Router, Turbopack)
-- **Database & ORM:** PostgreSQL + Prisma
-- **Authentication:** Supabase Auth (SSR)
-- **UI & Styling:** Tailwind CSS v4, Framer Motion, Shadcn UI
-- **State Management:** Zustand
-- **Canvas / Mindmap:** React Flow (or D3.js)
-- **AI Backend:** Groq (`llama-3.3-70b-versatile` chat, `nvidia/nv-embedqa-e5-v5` embeddings, 1024-dim)
-
-## 🏗️ Architecture & End-to-End Flow
-
-Synapse is built as a monolithic Next.js application, leveraging Supabase as a fully managed backend for authentication, database (PostgreSQL), vector storage (pgvector), and file storage. The architecture is explicitly designed for a **multi-tenant environment** (i.e. different schools and institutions) managed via Row-Level Security (RLS) on the data layer.
-
-### High-Level System Architecture
+## Architecture
 
 ```mermaid
 graph TD
     classDef client fill:#f3f4f6,stroke:#4f46e5,stroke-width:2px,color:#1f2937
     classDef server fill:#e0e7ff,stroke:#4338ca,stroke-width:2px,color:#1f2937
     classDef infra fill:#c7d2fe,stroke:#3730a3,stroke-width:2px,color:#1f2937
-    
+
     subgraph Client [Frontend - Next.js App Router]
         UI[Synapse UI] --> |Server Actions| API
         UI --> |Updates| State[Zustand Store]
         UI --> |Renders| Canvas[React Flow Mindmap]
     end
 
-    subgraph Backend [Backend - Next.js API]
-        API[Server Actions & API Routes]
-        AuthMW[Middleware / Auth Guards]
+    subgraph Backend [Backend - Server Actions]
+        API[Server Actions]
+        AuthMW[Auth Guards]
         API --> AuthMW
     end
 
     subgraph Supabase [Supabase Data Layer]
         DB[(PostgreSQL)]
         RLS[Row-Level Security]
-        Vectors[(pgvector)]
-        Storage[S3 Storage]
+        Vectors[(pgvector + full-text)]
+        Storage[Object Storage]
     end
-    
-    subgraph AI [AI Processing Layer]
-        Groq[Groq LPU] --> |Fast Chat Inference| Rerank
-        NIM[NVIDIA NIM] --> |Curriculum Analysis| Vectors
+
+    subgraph AI [AI Layer]
+        Groq[Groq Inference]
     end
 
     AuthMW --> |Authorized Qry| RLS
@@ -79,83 +79,75 @@ graph TD
     API --> |Doc Upload| Storage
     API --> |Context Qry| Vectors
     API --> |LLM Inference| Groq
-    API --> |Heavy Compute| NIM
-
-    class Client client
-    class Backend server
-    class Supabase infra
-    class AI infra
+    Groq --> |Grounded Answer| Vectors
 ```
 
-### End-to-End Workflow Explained
+### How the pieces fit
 
-1. **Multi-Tenant Onboarding (The Foundation)**
-   Institutions are modeled as separate tenants. A Super Admin creates an institution, then an Institution Admin adds Teachers and Students (either via direct CSV upload or ad-hoc join codes). Supabase's Row-Level Security ensures that queries are automatically scoped so that data from one school never leaks into another.
+1. **Onboarding.** A platform operator (`User.isSuperAdmin`) creates an institution at
+   `/admin/institutions`. Teachers then onboard students either with a CSV paste
+   (`/teacher/students`) or a batch join code. The join code is the one sanctioned
+   cross-tenant read, implemented as a `SECURITY DEFINER` function.
 
-2. **Curriculum Generation (Teacher Flow)**
-   Teachers create **Batches** (e.g., "Physics 101 - Fall") and define subjects. Rather than a flat list of chapters, the teacher constructs a curriculum using a **Node-based Mindmap Canvas** powered by React Flow. They can structure the syllabus dynamically, attaching PDF resources, links, and assignments directly onto specific nodes. NVIDIA's NIM microservices can optionally step in to auto-sequence topics into a logical progression tree based on uploaded syllabus documents.
+2. **Curriculum.** A teacher creates a batch and subject, then lays the syllabus out on the
+   mindmap canvas. Every node can carry resources and assignments.
 
-3. **Learning & Gameplay (Student Flow)**
-   Students access their dashboard and see the subject mindmap laid out like a game's skill tree. Topics start as **Locked** (`🔒`). As the class moves forward, the teacher unlocks them (`⬜ Upcoming`). Students study the attached materials on a topic and—once understood—mark it as **In-Progress** (`🟡`) or **Completed** (`✅`). This visual gamification (accruing XP and badges per node) replaces traditional, boring assignment charts.
+3. **Progress.** `TeacherProgress` records what the class has been taught;
+   `StudentProgress` records what each student has done. A node is *upcoming* when the
+   teacher has opened it and that student has not started — the state is derived, not stored,
+   so it can never contradict the two tables.
 
-4. **The "Engagement Gap" and Analytics (Data Flow)**
-   Because progression is logged directly via the mindmap UI, Synapse compares *where the Teacher thinks the class is* vs. *where individual Students actually are*. Synapse silently tracks passive signals (logins, resource view duration, node clicks) to place students in engagement tiers (🟢 Progressing, 🟡 Stuck, 🔴 Inactive), generating a heatmap for the teacher without asking students for annoying feedback surveys.
+4. **Analytics.** Engagement events (logins, page views, resource views, AI chats, topic
+   completions) are folded into three bands: Progressing, Stuck, Inactive. Teachers see the
+   bands plus the list of topics the class has not started; `/teacher/report` prints the whole
+   class as an A4 PDF.
 
-### AI RAG (Retrieval-Augmented Generation) Pipeline
+## The RAG pipeline, honestly
 
-When a student clicks on a difficult node and opens the Chat Assistant, the AI doesn't just use general knowledge. It uses **Retrieval-Augmented Generation** scoped strictly to that specific subject's resources.
+PDFs are extracted, chunked at ~500 characters with overlap, and stored per subject in
+`document_chunks`. Retrieval filters strictly on `subject_id`, so one subject's material can
+never appear as context for another.
 
-```mermaid
-sequenceDiagram
-    participant Student
-    participant NextJS as Next.js Server
-    participant DB as Supabase (pgvector)
-    participant Groq as Groq (LLM)
+Two upstream changes shaped the current design:
 
-    Student->>NextJS: Asks question in Physics topic chat
-    NextJS->>DB: Embed query & perform Vector Search
-    Note over DB: Filters strictly by `subject_id` to prevent context bleed
-    DB-->>NextJS: Returns relevant document chunks
-    NextJS->>Groq: Prompt: Context + Student Profile + Question
-    Groq-->>NextJS: Streams high-speed response
-    NextJS-->>Student: Displays answer UI
+- Groq retired its embedding models (`nvidia/nv-embedqa-e5-v5` reached end of life on
+  2026-08-25), and the NVIDIA NIM account used here is not provisioned for embeddings.
+- `llama-3.3-70b-versatile` is no longer served; chat runs on `openai/gpt-oss-120b`.
+
+So the vector path is **opt-in**: set `EMBEDDING_BASE_URL`, `EMBEDDING_MODEL` and
+`EMBEDDING_API_KEY` to use pgvector. Without them, retrieval falls back to PostgreSQL
+full-text search (`websearch_to_tsquery`, GIN-indexed), which works today and keeps answers
+grounded in the teacher's own material. `migrations/3_fts` adds that index.
+
+## Tech stack
+
+- **Framework:** Next.js 16 (App Router, Turbopack), React 19
+- **UI:** Tailwind CSS v4, Framer Motion, Base UI components (`base-nova`), lucide icons
+- **Data:** PostgreSQL, Prisma 7 with the `@prisma/adapter-pg` driver, pgvector
+- **Auth & storage:** Supabase Auth (SSR), Supabase Storage
+- **Canvas:** React Flow (`@xyflow/react` 12), Zustand for client state
+- **AI:** Groq SDK for chat, PDF ingestion via `pdf-parse` v2
+
+## Routes
+
+```
+/login                       sign in
+/student                     dashboard
+/student/learning-path       mindmap + assignments + announcements + XP
+/student/subjects/[subjectId]
+/teacher                     dashboard
+/teacher/learning-path       class progress + announcements + assignment counts
+/teacher/subjects/[subjectId]
+/teacher/students            CSV onboarding
+/teacher/assignments         create + track submissions
+/teacher/report              printable class report
+/teacher/analytics
+/admin                       institution overview
+/admin/institutions          tenant creation (platform operator only)
 ```
 
-This ensures that the AI only relies on the teacher's approved syllabus, maintaining academic integrity and keeping the assistant's advice firmly within the curriculum boundaries.
+## Docs
 
-## 🏃 Getting Started
-
-### Prerequisites
-- Node.js & [Bun](https://bun.sh/)
-- A [Supabase](https://supabase.com/) project
-- PostgreSQL database
-
-### Installation
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/pantha704/synapse.git
-   cd synapse
-   ```
-
-2. Install dependencies via bun:
-   ```bash
-   bun install
-   ```
-
-3. Configure your environment variables in `.env.local`:
-   ```env
-   NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-   ```
-
-4. Run the development server:
-   ```bash
-   bun run dev
-   ```
-
-5. Access the application running locally at [http://localhost:3000](http://localhost:3000).
-
----
-
-*Built for hackathons, designed for academic excellence.*
+- `docs/SUPABASE.md` — project setup, the role split, and the RLS evidence
+- `docs/report/` — the corrected project proposal (28 pages) plus its change log
+- `scripts/verify-rls.sql` — re-run the isolation probe per institution
