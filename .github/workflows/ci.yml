@@ -2,7 +2,6 @@ name: ci
 
 on:
   push:
-    branches: [master, "fix/**"]
   pull_request:
 
 jobs:

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/utils/supabase/server";
 import type {
+  AnnouncementItem,
   BatchPulse,
   CriticalNode,
   LearningNode,
@@ -33,6 +34,14 @@ const emptyStats = (name: string, title: string): StudentStats => ({
 const toStatus = (s?: string): LearningStatus =>
   s === "COMPLETED" ? "completed" : s === "IN_PROGRESS" ? "in-progress" : "locked";
 
+// Four states, as the report describes them: the teacher has to open a topic
+// before it can be "upcoming" for a student; until then it stays locked.
+const toStudentStatus = (studentStatus: string | undefined, teacherOpened: boolean): LearningStatus => {
+  if (studentStatus === "COMPLETED") return "completed";
+  if (studentStatus === "IN_PROGRESS") return "in-progress";
+  return teacherOpened ? "upcoming" : "locked";
+};
+
 // ponytail: coarse progress (0/50/100) until per-topic resource counts are wired.
 const toNode = (
   id: string,
@@ -46,7 +55,7 @@ const toNode = (
   description,
   status,
   progress: status === "completed" ? 100 : status === "in-progress" ? 50 : 0,
-  icon: status === "completed" ? "check" : status === "in-progress" ? "book" : "lock",
+  icon: status === "completed" ? "check" : status === "in-progress" ? "book" : status === "upcoming" ? "clock" : "lock",
   position: POSITIONS[i % POSITIONS.length],
 });
 
@@ -58,9 +67,19 @@ export async function getStudentPath(): Promise<{
   stats: StudentStats;
   peers: PeerComparison[];
   currentStudentId: string;
+  announcements: AnnouncementItem[];
+  batchId: string | null;
 }> {
   const user = await currentDbUser();
-  if (!user) return { nodes: [], stats: emptyStats("Student", "Not signed in"), peers: [], currentStudentId: "" };
+  if (!user)
+    return {
+      nodes: [],
+      stats: emptyStats("Student", "Not signed in"),
+      peers: [],
+      currentStudentId: "",
+      announcements: [],
+      batchId: null,
+    };
 
   const student = await prisma.user.findUnique({
     where: { id: user.id },
@@ -81,18 +100,38 @@ export async function getStudentPath(): Promise<{
     },
   });
   if (!student) {
-    return { nodes: [], stats: emptyStats("Student", "No profile"), peers: [], currentStudentId: "" };
+    return {
+      nodes: [],
+      stats: emptyStats("Student", "No profile"),
+      peers: [],
+      currentStudentId: "",
+      announcements: [],
+      batchId: null,
+    };
   }
 
   const subjects = student.enrolledBatches.flatMap((eb) => eb.batch.subjects.map((bs) => bs.subject));
   const subject = subjects[0];
   const statusByTopic = new Map(student.studentProgress.map((p) => [p.topicId, p.status]));
 
-  const nodes: LearningNode[] = (subject?.topicNodes ?? []).map((t, i) =>
-    toNode(t.id, t.title, t.description ?? subject?.name ?? "", toStatus(statusByTopic.get(t.id)), i)
+  const batchIds = student.enrolledBatches.map((eb) => eb.batchId);
+  const teacherRows = batchIds.length
+    ? await prisma.teacherProgress.findMany({ where: { batchId: { in: batchIds } } })
+    : [];
+  const openedByTopic = new Set(
+    teacherRows.filter((r) => r.status !== "NOT_STARTED").map((r) => r.topicId)
   );
 
-  const batchIds = student.enrolledBatches.map((eb) => eb.batchId);
+  const nodes: LearningNode[] = (subject?.topicNodes ?? []).map((t, i) =>
+    toNode(
+      t.id,
+      t.title,
+      t.description ?? subject?.name ?? "",
+      toStudentStatus(statusByTopic.get(t.id), openedByTopic.has(t.id)),
+      i
+    )
+  );
+
   const classmates = batchIds.length
     ? await prisma.batchStudent.findMany({
         where: { batchId: { in: batchIds } },
@@ -171,8 +210,25 @@ export async function getStudentPath(): Promise<{
     time: asDate(e.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" }),
   }));
 
+  const announcements = batchIds.length
+    ? await prisma.announcement.findMany({
+        where: { batchId: { in: batchIds } },
+        include: { reads: { where: { studentId: student.id }, select: { id: true } } },
+        orderBy: { createdAt: "desc" },
+        take: 5,
+      })
+    : [];
+
   return {
     nodes,
+    announcements: announcements.map((a) => ({
+      id: a.id,
+      title: a.title,
+      body: a.body,
+      createdAt: asDate(a.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" }),
+      read: a.reads.length > 0,
+    })),
+    batchId: student.enrolledBatches[0]?.batchId ?? null,
     stats: {
       name: student.name ?? student.email.split("@")[0],
       title: student.enrolledBatches[0]?.batch.name ?? "No batch yet",
@@ -189,6 +245,8 @@ export async function getTeacherPath(): Promise<{
   nodes: LearningNode[];
   batchPulse: BatchPulse;
   criticalNodes: CriticalNode[];
+  announcements: AnnouncementItem[];
+  batchId: string | null;
 }> {
   const user = await currentDbUser();
   const empty: BatchPulse = {
@@ -197,7 +255,7 @@ export async function getTeacherPath(): Promise<{
     period: "vs last week",
     weeklyData: [0, 0, 0, 0, 0, 0, 0],
   };
-  if (!user) return { nodes: [], batchPulse: empty, criticalNodes: [] };
+  if (!user) return { nodes: [], batchPulse: empty, criticalNodes: [], announcements: [], batchId: null };
 
   const teacher = await prisma.user.findUnique({
     where: { id: user.id },
@@ -212,7 +270,7 @@ export async function getTeacherPath(): Promise<{
     },
   });
   if (!teacher || teacher.taughtBatches.length === 0) {
-    return { nodes: [], batchPulse: empty, criticalNodes: [] };
+    return { nodes: [], batchPulse: empty, criticalNodes: [], announcements: [], batchId: null };
   }
 
   const batch = teacher.taughtBatches[0];
@@ -263,8 +321,22 @@ export async function getTeacherPath(): Promise<{
       severity: count > 1 ? "warning" : "info",
     }));
 
+  const announcements = await prisma.announcement.findMany({
+    where: { batchId: batch.id },
+    orderBy: { createdAt: "desc" },
+    take: 5,
+  });
+
   return {
     nodes,
+    batchId: batch.id,
+    announcements: announcements.map((a) => ({
+      id: a.id,
+      title: a.title,
+      body: a.body,
+      createdAt: asDate(a.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" }),
+      read: true,
+    })),
     batchPulse: {
       activity: thisWeek,
       change: `${change >= 0 ? "+" : ""}${change}%`,
