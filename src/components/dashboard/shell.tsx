@@ -11,6 +11,7 @@ import {
   BookOpen,
   Users,
   BarChart3,
+  ClipboardList,
   Settings,
   LogOut,
   ChevronLeft,
@@ -37,6 +38,7 @@ const NAV_ITEMS: Record<string, { label: string; href: string; icon: React.Eleme
     { label: "Dashboard", href: "/teacher", icon: LayoutDashboard },
     { label: "Learning Path", href: "/teacher/learning-path", icon: BookOpen },
     { label: "Students", href: "/teacher/students", icon: Users },
+    { label: "Assignments", href: "/teacher/assignments", icon: ClipboardList },
     { label: "Analytics", href: "/teacher/analytics", icon: BarChart3 },
   ],
   STUDENT: [

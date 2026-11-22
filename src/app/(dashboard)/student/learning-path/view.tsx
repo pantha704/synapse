@@ -5,7 +5,8 @@ import { PeerComparisonPanel } from "@/components/student/PeerComparisonPanel";
 import { motion } from "framer-motion";
 import { Calendar, Clock, CheckCircle2, Download, Send } from "lucide-react";
 import { AnnouncementsPanel } from "@/components/announcements/announcements-panel";
-import type { AnnouncementItem, LearningNode, PeerComparison, StudentStats } from "@/lib/path-types";
+import { AssignmentsPanel } from "@/components/assignments/assignments-panel";
+import type { AnnouncementItem, AssignmentItem, LearningNode, PeerComparison, StudentStats } from "@/lib/path-types";
 
 const activityIcons: Record<string, typeof CheckCircle2> = {
   completed: CheckCircle2,
@@ -19,10 +20,11 @@ interface Props {
   peers: PeerComparison[];
   currentStudentId: string;
   announcements: AnnouncementItem[];
+  assignments: AssignmentItem[];
   batchId: string | null;
 }
 
-export function StudentPathView({ nodes, stats, peers, currentStudentId, announcements, batchId }: Props) {
+export function StudentPathView({ nodes, stats, peers, currentStudentId, announcements, assignments, batchId }: Props) {
   return (
     <div className="min-h-screen bg-[#fafafa]">
 
@@ -95,6 +97,8 @@ export function StudentPathView({ nodes, stats, peers, currentStudentId, announc
           </div>
 
           <AnnouncementsPanel items={announcements} canPost={false} batchId={batchId} />
+
+          <AssignmentsPanel items={assignments} canSubmit />
 
           {peers.length > 0 && <PeerComparisonPanel peers={peers} currentStudentId={currentStudentId} />}
 
