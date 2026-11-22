@@ -4,9 +4,9 @@ import { PrintButton } from "./print-button";
 export const dynamic = "force-dynamic";
 
 const tierColor: Record<string, string> = {
-  Progressing: "text-emerald-400",
-  Stuck: "text-amber-400",
-  Inactive: "text-red-400",
+  Progressing: "text-emerald-700",
+  Stuck: "text-amber-700",
+  Inactive: "text-red-600",
 };
 
 export default async function TeacherReportPage() {
@@ -39,10 +39,10 @@ export default async function TeacherReportPage() {
           </thead>
           <tbody className="text-gray-700">
             {rows.length === 0 ? (
-              <tr><td colSpan={7} className="px-4 py-6 text-center text-gray-400">Nothing to report yet.</td></tr>
+              <tr><td colSpan={7} className="px-4 py-6 text-center text-gray-500">Nothing to report yet.</td></tr>
             ) : rows.map((r, i) => (
               <tr key={r.studentId} className="border-t border-gray-100">
-                <td className="px-4 py-3 text-gray-400">{i + 1}</td>
+                <td className="px-4 py-3 text-gray-500">{i + 1}</td>
                 <td className="px-4 py-3 font-medium">{r.name}</td>
                 <td className="px-4 py-3 text-gray-500">{r.email}</td>
                 <td className="px-4 py-3">{r.completed}/{r.total}</td>

@@ -17,9 +17,9 @@ interface Props {
 
 export function TeacherPathView({ nodes, batchPulse, criticalNodes, announcements, assignments, batchId }: Props) {
   return (
-    <div className="min-h-screen bg-[#0e0e0e]">
+    <div className="flex min-h-0 flex-1 flex-col">
 
-      <main className="h-[calc(100vh-4rem)] overflow-hidden flex">
+      <main className="flex min-h-0 flex-1 overflow-hidden">
         {nodes.length > 0 ? (
           <LearningPath nodes={nodes} />
         ) : (

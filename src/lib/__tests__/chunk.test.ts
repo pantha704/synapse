@@ -32,4 +32,22 @@ describe("chunkText", () => {
   it("handles an empty document", () => {
     expect(chunkText("")).toEqual([]);
   });
+
+  it("does not split a decimal into two sentences", () => {
+    const body = "The constant which is value 3.14 and then the rest of the sentence continues here. ";
+    const chunks = chunkText((body + "Another sentence follows it. ").repeat(20));
+    expect(chunks.join(" ")).toContain("3.14");
+    expect(chunks.every((c) => !/^\d+\s/.test(c))).toBe(true);
+  });
+
+  it("starts every chunk on a word boundary", () => {
+    const text = Array.from({ length: 120 }, (_, i) => `Sentence ${i} explains a small idea clearly.`).join(" ");
+    const chunks = chunkText(text);
+    expect(chunks.every((c) => /^[A-Z0-9"(]/.test(c))).toBe(true);
+  });
+
+  it("drops table-of-contents dot leaders", () => {
+    const toc = ". ".repeat(400);
+    expect(chunkText(toc)).toEqual([]);
+  });
 });

@@ -21,7 +21,8 @@ async function getDashboardData(): Promise<DashboardData> {
         include: {
           _count: {
             select: { students: true, subjects: true }
-          }
+          },
+          subjects: { select: { subjectId: true }, take: 1 },
         }
       }
     }
@@ -63,6 +64,7 @@ async function getDashboardData(): Promise<DashboardData> {
       id: b.id,
       name: b.name,
       joinCode: b.joinCode,
+      subjectId: b.subjects[0]?.subjectId ?? null,
       _count: b._count,
     })),
     teacherName: teacher.name || "Teacher"

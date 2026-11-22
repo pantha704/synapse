@@ -84,37 +84,41 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* Product palette. These were stock shadcn neutral (oklch greys), so every
+     component that used a token — Card, default Button, Sheet, Toaster, React
+     Flow — rendered in a different visual system from the ~95% of the app that
+     hardcodes hsl(220). One place now, instead of overrides in every file. */
+  --background: hsl(220 20% 6%);
+  --foreground: hsl(0 0% 98%);
+  --card: hsl(220 15% 10%);
+  --card-foreground: hsl(0 0% 98%);
+  --popover: hsl(220 15% 10%);
+  --popover-foreground: hsl(0 0% 98%);
+  --primary: hsl(258 90% 60%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(220 15% 14%);
+  --secondary-foreground: hsl(0 0% 98%);
+  --muted: hsl(220 15% 14%);
+  --muted-foreground: hsl(220 10% 65%);
+  --accent: hsl(220 15% 16%);
+  --accent-foreground: hsl(0 0% 98%);
+  --destructive: hsl(0 72% 55%);
+  --border: hsl(0 0% 100% / 6%);
+  --input: hsl(0 0% 100% / 8%);
+  --ring: hsl(258 60% 60%);
+  --chart-1: hsl(258 90% 66%);
+  --chart-2: hsl(189 94% 55%);
+  --chart-3: hsl(152 76% 50%);
+  --chart-4: hsl(38 92% 60%);
+  --chart-5: hsl(0 84% 62%);
+  --sidebar: hsl(220 18% 8%);
+  --sidebar-foreground: hsl(0 0% 98%);
+  --sidebar-primary: hsl(258 90% 60%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(220 15% 14%);
+  --sidebar-accent-foreground: hsl(0 0% 98%);
+  --sidebar-border: hsl(0 0% 100% / 6%);
+  --sidebar-ring: hsl(258 60% 60%);
 }
 
 @layer base {

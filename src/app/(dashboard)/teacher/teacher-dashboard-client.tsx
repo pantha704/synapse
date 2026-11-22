@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { BookOpen, Users, TrendingUp, Plus, ArrowRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,6 +18,7 @@ export type BatchData = {
   id: string;
   name: string;
   joinCode: string;
+  subjectId: string | null;
   _count: { students: number; subjects: number };
 };
 
@@ -78,10 +80,12 @@ export default function TeacherDashboardClient({ dataPromise }: { dataPromise: P
           <Button
             size="sm"
             variant="outline"
+            render={<Link href="/teacher/students" />}
+            nativeButton={false}
             className="border-white/[0.08] text-white/65 hover:text-white hover:bg-white/[0.04] gap-1.5"
           >
             <Plus className="w-3.5 h-3.5" />
-            New Batch
+            Add students
           </Button>
         </div>
 
@@ -97,8 +101,12 @@ export default function TeacherDashboardClient({ dataPromise }: { dataPromise: P
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 + i * 0.07, duration: 0.35, ease: [0.23, 1, 0.32, 1] as [number, number, number, number] }}
             >
-              <Card className="bg-[hsl(220,15%,10%)]/60 border-white/[0.06] hover:border-white/[0.12] transition-all duration-200 group cursor-pointer">
+              <Card className="bg-[hsl(220,15%,10%)]/60 border-white/[0.06] hover:border-white/[0.12] transition-all duration-200 group">
                 <CardContent className="flex items-center gap-4 p-4">
+                  <Link
+                    href={batch.subjectId ? `/teacher/subjects/${batch.subjectId}` : "/teacher/students"}
+                    className="flex flex-1 items-center gap-4 focus-visible:outline-none"
+                  >
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <p className="font-medium text-white/90">{batch.name}</p>
@@ -113,7 +121,8 @@ export default function TeacherDashboardClient({ dataPromise }: { dataPromise: P
                       {batch._count.students} students · {batch._count.subjects} subjects
                     </p>
                   </div>
-                  <ArrowRight className="w-4 h-4 text-white/20 group-hover:text-violet-400 group-hover:translate-x-1 transition-all duration-200" />
+                    <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-violet-300 group-hover:translate-x-1 transition-all duration-200" />
+                  </Link>
                 </CardContent>
               </Card>
             </motion.div>
