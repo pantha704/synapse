@@ -10,55 +10,74 @@ suite("tenant isolation (live database)", () => {
   let client: Client;
   let teacherA = "";
   let teacherB = "";
+  let totalSubjects = 0;
 
   beforeAll(async () => {
     client = new Client({ connectionString: url });
     await client.connect();
 
+    // only institutions that actually own a subject can prove anything: with an
+    // empty tenant on one side, `a + b <= total` passes even if the policy leaks
     const { rows } = await client.query<{ supabase_id: string; institution_id: string }>(
       `select u.supabase_id, u.institution_id
-       from users u
-       where u.role = 'TEACHER'
-       order by u.institution_id`
+         from users u
+        where u.role = 'TEACHER'
+          and exists (select 1 from subjects s where s.institution_id = u.institution_id)
+        order by u.institution_id`
     );
     const byInstitution = new Map<string, string>();
     for (const r of rows) if (!byInstitution.has(r.institution_id)) byInstitution.set(r.institution_id, r.supabase_id);
     const ids = [...byInstitution.keys()];
     teacherA = ids[0] ? byInstitution.get(ids[0])! : "";
     teacherB = ids[1] ? byInstitution.get(ids[1])! : "";
+
+    const total = await client.query<{ n: number }>("select count(*)::int as n from subjects");
+    totalSubjects = total.rows[0].n;
   }, 20000);
 
   afterAll(async () => {
     await client?.end();
   });
 
-  /** Counts rows visible to `sub` when the connection is the plain authenticated role. */
-  async function visibleSubjects(sub: string) {
+  /** Runs `fn` inside a transaction as `role`, then always rolls back. */
+  async function as(role: "authenticated" | "anon", sub: string | null, fn: () => Promise<void>) {
     await client.query("begin");
     try {
-      await client.query("select set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub })]);
-      await client.query("set local role authenticated");
-      const { rows } = await client.query<{ n: number }>("select count(*)::int as n from subjects");
-      return rows[0].n;
+      if (sub) {
+        await client.query("select set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub })]);
+      }
+      await client.query(`set local role ${role}`);
+      await fn();
     } finally {
       await client.query("rollback");
     }
   }
 
-  it("two teachers belong to different institutions", () => {
+  async function visibleSubjects(sub: string) {
+    let count = 0;
+    await as("authenticated", sub, async () => {
+      const { rows } = await client.query<{ n: number }>("select count(*)::int as n from subjects");
+      count = rows[0].n;
+    });
+    return count;
+  }
+
+  it("two teachers, each owning subjects, in different institutions", () => {
     expect(teacherA).not.toBe("");
     expect(teacherB).not.toBe("");
     expect(teacherA).not.toBe(teacherB);
   });
 
-  it("sees only its own institution's subjects", async () => {
+  it("each sees only its own institution's subjects, and together they see all of them", async () => {
     const a = await visibleSubjects(teacherA);
     const b = await visibleSubjects(teacherB);
-    // total across both institutions is strictly greater than either view,
-    // unless one institution genuinely has no subjects
-    const { rows } = await client.query<{ n: number }>("select count(*)::int as n from subjects");
-    expect(a + b).toBeLessThanOrEqual(rows[0].n);
-    expect(a === 0 || b === 0 || a + b === rows[0].n).toBe(true);
+    expect(a).toBeGreaterThan(0);
+    expect(b).toBeGreaterThan(0);
+    expect(a + b).toBe(totalSubjects);
+  });
+
+  it("returns nothing for a caller with no valid subject", async () => {
+    expect(await visibleSubjects("00000000-0000-0000-0000-000000000000")).toBe(0);
   });
 
   it("enables RLS on every public table", async () => {
@@ -74,7 +93,32 @@ suite("tenant isolation (live database)", () => {
     expect(rows.map((r) => r.relname)).toEqual([]);
   });
 
-  it("returns nothing for a caller with no valid subject", async () => {
-    expect(await visibleSubjects("00000000-0000-0000-0000-000000000000")).toBe(0);
+  // Policies are not the boundary: a table-level grant makes a policy irrelevant.
+  // These three writes were reachable through the shipped anon key's sibling —
+  // the authenticated role every signed-in user gets.
+  it("denies curriculum writes from the authenticated role", async () => {
+    await expect(
+      as("authenticated", teacherA, async () => {
+        await client.query("update subjects set name = name");
+      })
+    ).rejects.toThrow(/permission denied/i);
+  });
+
+  it("denies self-enrolment into a batch from the authenticated role", async () => {
+    await expect(
+      as("authenticated", teacherA, async () => {
+        await client.query(
+          "insert into batch_students (batch_id, student_id) values ((select id from batches limit 1), 'probe')"
+        );
+      })
+    ).rejects.toThrow(/permission denied/i);
+  });
+
+  it("denies every table read to anon", async () => {
+    await expect(
+      as("anon", null, async () => {
+        await client.query("select 1 from subjects");
+      })
+    ).rejects.toThrow(/permission denied/i);
   });
 });
