@@ -30,7 +30,7 @@ export function StudentPathView({ nodes, stats, peers, currentStudentId, announc
 
       <main className="flex min-h-0 flex-1 overflow-hidden">
         {nodes.length > 0 ? (
-          <AcademicLearningPath nodes={nodes} />
+          <AcademicLearningPath nodes={nodes} title={stats.title} />
         ) : (
           <div className="flex-1 flex items-center justify-center p-10">
             <div className="max-w-sm text-center space-y-2">

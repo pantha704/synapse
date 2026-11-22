@@ -18,7 +18,7 @@ export function AcademicPathNode({ node, index }: AcademicPathNodeProps) {
 
   const statusConfig = {
     completed: {
-      bgColor: "bg-emerald-50",
+      bgColor: "bg-emerald-500/10",
       borderColor: "border-emerald-200",
       iconBg: "bg-emerald-100",
       iconColor: "text-emerald-600",
@@ -26,7 +26,7 @@ export function AcademicPathNode({ node, index }: AcademicPathNodeProps) {
       Icon: CheckCircle2,
     },
     "in-progress": {
-      bgColor: "bg-white",
+      bgColor: "bg-white/[0.04]",
       borderColor: "border-indigo-200",
       iconBg: "bg-indigo-100",
       iconColor: "text-indigo-600",
@@ -34,7 +34,7 @@ export function AcademicPathNode({ node, index }: AcademicPathNodeProps) {
       Icon: BookOpen,
     },
     upcoming: {
-      bgColor: "bg-amber-50",
+      bgColor: "bg-amber-500/10",
       borderColor: "border-amber-200",
       iconBg: "bg-amber-100",
       iconColor: "text-amber-600",
@@ -42,11 +42,11 @@ export function AcademicPathNode({ node, index }: AcademicPathNodeProps) {
       Icon: Clock,
     },
     locked: {
-      bgColor: "bg-gray-100",
-      borderColor: "border-gray-200",
+      bgColor: "bg-white/[0.02]",
+      borderColor: "border-white/10",
       iconBg: "bg-gray-200",
-      iconColor: "text-gray-400",
-      titleColor: "text-gray-500",
+      iconColor: "text-white/40",
+      titleColor: "text-white/60",
       Icon: Lock,
     },
   };
@@ -70,14 +70,14 @@ export function AcademicPathNode({ node, index }: AcademicPathNodeProps) {
           </div>
           <div className="flex-1 min-w-0">
             <h3 className={`text-sm font-bold ${config.titleColor} leading-tight`}>{node.title}</h3>
-            <p className="text-[11px] text-gray-500 mt-1">{node.description}</p>
+            <p className="text-[11px] text-white/60 mt-1">{node.description}</p>
           </div>
         </div>
 
         {node.status === "in-progress" && node.progress !== undefined && (
           <div className="mt-4">
             <div className="flex justify-between items-center mb-1.5">
-              <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">Progress</span>
+              <span className="text-[10px] font-medium text-white/55 uppercase tracking-wider">Progress</span>
               <span className="text-[10px] font-bold text-indigo-600">{node.progress}%</span>
             </div>
             <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
@@ -97,25 +97,30 @@ export function AcademicPathNode({ node, index }: AcademicPathNodeProps) {
 
 interface AcademicLearningPathProps {
   nodes: LearningNode[];
+  title?: string;
 }
 
-export function AcademicLearningPath({ nodes }: AcademicLearningPathProps) {
+export function AcademicLearningPath({ nodes, title }: AcademicLearningPathProps) {
+  // these were the literals "Computer Science 101", "3 modules", "65% complete"
+  // on every student's path, whatever subject they had actually opened
+  const completed = nodes.filter((n) => n.status === "completed").length;
+  const percent = nodes.length ? Math.round((completed / nodes.length) * 100) : 0;
+
   return (
     <section className="flex-1 relative overflow-y-auto py-16 px-12" style={{
-      background: "#fafafa",
-      backgroundImage: `radial-gradient(circle at 1px 1px, #e5e7eb 1px, transparent 0)`,
+      backgroundImage: "radial-gradient(circle at 1px 1px rgba(255,255,255,0.06) 1px, transparent 0)",
       backgroundSize: "20px 20px",
     }}>
       {/* Top Course Header */}
       <div className="max-w-4xl mx-auto mb-8 flex items-center justify-between">
         <div>
-          <p className="text-[10px] uppercase tracking-widest text-indigo-500 font-semibold">Computer Science 101</p>
-          <h2 className="text-xl font-bold text-gray-900 mt-1">Learning Path</h2>
+          <p className="text-[10px] uppercase tracking-widest text-violet-300 font-semibold">{title ?? "Your course"}</p>
+          <h2 className="text-xl font-bold text-white mt-1">Learning Path</h2>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500">3 modules</span>
-          <span className="text-gray-300">•</span>
-          <span className="text-xs text-gray-500">65% complete</span>
+          <span className="text-xs text-white/60">{nodes.length} topic{nodes.length === 1 ? "" : "s"}</span>
+          <span className="text-white/25">•</span>
+          <span className="text-xs text-white/60">{percent}% complete</span>
         </div>
       </div>
 
