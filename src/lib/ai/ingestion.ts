@@ -11,7 +11,7 @@ export interface Chunk {
 const CHUNK_SIZE = 500;
 const CHUNK_OVERLAP = 50;
 
-function chunkText(text: string): string[] {
+export function chunkText(text: string): string[] {
   const chunks: string[] = [];
   let start = 0;
 

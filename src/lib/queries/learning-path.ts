@@ -37,7 +37,7 @@ const emptyStats = (name: string, title: string): StudentStats => ({
 
 // XP and badges are derived, not stored: 10 XP per completed topic, a level every
 // 100 XP, and a badge at the 1st, 5th and every 10th completion after that.
-const GAMIFICATION = (completed: number) => {
+export const GAMIFICATION = (completed: number) => {
   const xp = completed * 10;
   const badges: string[] = [];
   if (completed >= 1) badges.push("First Steps");

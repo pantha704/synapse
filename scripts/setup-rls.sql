@@ -221,3 +221,8 @@ begin
     execute format('create policy app_service_access on public.%I to synapse_app using (true) with check (true)', t.tablename);
   end loop;
 end $$;
+
+-- The app role may switch into the client roles, which is how the isolation test
+-- and any scoped query run. authenticated carries only SELECT grants + policies.
+grant authenticated to synapse_app;
+grant anon to synapse_app;
