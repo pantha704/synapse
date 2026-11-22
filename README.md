@@ -10,14 +10,14 @@ delivery and each student's own progress are tracked against it.
 | Area | Status |
 | --- | --- |
 | Multi-tenant data model (institution → batch → subject → topic) | Built |
-| Row-Level Security on every table, verified by a cross-tenant probe | Built |
-| React Flow mindmap, teacher-built, student-pannable | Built |
+| RLS on every table for the browser/PostgREST path, verified by a cross-tenant probe. The Prisma role has `using (true)` policies, so app queries scope tenants in code | Built |
+| React Flow mindmap, teacher-arrangeable, student-pannable. Batches, subjects and topics come from the seed — no create UI | Built |
 | Dual progress: `TeacherProgress` + `StudentProgress` | Built |
-| Node states: not started → upcoming → in progress → completed | Built (`upcoming` is derived) |
+| Node states on the mindmap: not started → in progress → completed. `upcoming` is derived on the learning-path cards only | Built |
 | Three-tier engagement bands (Progressing / Stuck / Inactive) | Built |
 | Announcements, assignments + submissions, CSV onboarding | Built |
 | Derived XP, levels and badges | Built |
-| Subject-scoped RAG chat + PDF ingestion | Built, with the caveats below |
+| Subject-scoped RAG chat + PDF ingestion | **Backend built, no UI mounted** — the chat panel and the upload form are not wired to a route |
 | Class progress report (print → PDF) | Built |
 | Per-student heatmap painted onto the canvas | **Not built** |
 
@@ -26,7 +26,7 @@ delivery and each student's own progress are tracked against it.
 ```bash
 cp .env.example .env.local          # Supabase URL, anon + service keys, DATABASE_URL, GROQ_API_KEY
 npm install                         # runs prisma generate
-npx prisma migrate deploy           # apply migrations 1..4
+npx prisma migrate deploy           # fresh DB: 0_init through 5_pgvector
 psql "$DATABASE_URL" -f scripts/setup-rls.sql
 npm run seed                        # demo tenant with real Supabase auth users
 npm run dev
@@ -38,7 +38,7 @@ Demo accounts created by the seed — password `SynapseDemo2026!`:
 | --- | --- |
 | `teacher@demo.synapse.dev` | TEACHER (1 batch, 8 topics, 10 students) |
 | `student1@demo.synapse.dev` … `student10@` | STUDENT |
-| `admin@demo.synapse.dev` | ADMIN + platform operator |
+| `admin@demo.synapse.dev` | ADMIN (the seed does not set `isSuperAdmin`; set it manually) |
 
 Checks: `npm run typecheck` · `npm run lint` · `npm test` · `npm run build` — all four run in CI.
 `npm run test:rls` runs the tenant-isolation suite against a live database.
@@ -53,7 +53,6 @@ graph TD
 
     subgraph Client [Frontend - Next.js App Router]
         UI[Synapse UI] --> |Server Actions| API
-        UI --> |Updates| State[Zustand Store]
         UI --> |Renders| Canvas[React Flow Mindmap]
     end
 
@@ -86,27 +85,32 @@ graph TD
 
 1. **Onboarding.** A platform operator (`User.isSuperAdmin`) creates an institution at
    `/admin/institutions`. Teachers then onboard students either with a CSV paste
-   (`/teacher/students`) or a batch join code. The join code is the one sanctioned
-   cross-tenant read, implemented as a `SECURITY DEFINER` function.
+   (`/teacher/students`) or a batch join code — the one sanctioned cross-tenant read,
+   implemented as the `SECURITY DEFINER` function `join_batch_by_code`. Signup still looks
+   the code up directly and places the account in that batch's institution.
 
-2. **Curriculum.** A teacher creates a batch and subject, then lays the syllabus out on the
-   mindmap canvas. Every node can carry resources and assignments.
+2. **Curriculum.** A teacher rearranges the syllabus on the mindmap canvas; the topic tree
+   itself comes from the seed. Every node can carry resources and assignments.
 
 3. **Progress.** `TeacherProgress` records what the class has been taught;
    `StudentProgress` records what each student has done. A node is *upcoming* when the
    teacher has opened it and that student has not started — the state is derived, not stored,
    so it can never contradict the two tables.
 
-4. **Analytics.** Engagement events (logins, page views, resource views, AI chats, topic
-   completions) are folded into three bands: Progressing, Stuck, Inactive. Teachers see the
+4. **Analytics.** Engagement events — in the running app only topic completions, plus the
+   seed's login and resource-view rows — are folded into three bands: Progressing, Stuck, Inactive. Teachers see the
    bands plus the list of topics the class has not started; `/teacher/report` prints the whole
    class as an A4 PDF.
 
 ## The RAG pipeline, honestly
 
-PDFs are extracted, chunked at ~500 characters with overlap, and stored per subject in
-`document_chunks`. Retrieval filters strictly on `subject_id`, so one subject's material can
-never appear as context for another.
+PDFs are extracted page by page, chunked at ~500 characters on sentence boundaries, and stored
+per subject in `document_chunks` with the page each chunk came from. Re-uploading the same file
+replaces its chunks instead of duplicating them, and table-of-contents rows and running page
+footers are dropped before they can be retrieved. Retrieval filters strictly on `subject_id`,
+so one subject's material can never appear as context for another. With no embedding provider
+configured it uses PostgreSQL full-text search; a query that matches nothing returns no context
+and the model is told so rather than being handed unrelated chunks.
 
 Two upstream changes shaped the current design:
 
@@ -125,7 +129,7 @@ grounded in the teacher's own material. `migrations/3_fts` adds that index.
 - **UI:** Tailwind CSS v4, Framer Motion, Base UI components (`base-nova`), lucide icons
 - **Data:** PostgreSQL, Prisma 7 with the `@prisma/adapter-pg` driver, pgvector
 - **Auth & storage:** Supabase Auth (SSR), Supabase Storage
-- **Canvas:** React Flow (`@xyflow/react` 12), Zustand for client state
+- **Canvas:** React Flow (`@xyflow/react` 12); client state is React `useState`/`useNodesState`
 - **AI:** Groq SDK for chat, PDF ingestion via `pdf-parse` v2
 
 ## Routes
@@ -133,7 +137,7 @@ grounded in the teacher's own material. `migrations/3_fts` adds that index.
 ```
 /login                       sign in
 /student                     dashboard
-/student/learning-path       mindmap + assignments + announcements + XP
+/student/learning-path       path cards + assignments + announcements + XP (map lives at /student/subjects/[id])
 /student/subjects/[subjectId]
 /teacher                     dashboard
 /teacher/learning-path       class progress + announcements + assignment counts

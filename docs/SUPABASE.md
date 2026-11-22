@@ -27,6 +27,9 @@ because the CLI needs the owner password. Files live in `prisma/migrations/`.
 | --- | --- |
 | `1_announcements` | applied |
 | `2_assignments` | applied |
+| `3_fts` | applied |
+| `4_super_admin` | applied |
+| `5_pgvector` | applied |
 | `0_init` | **not** applied — those tables already existed from the April build |
 
 `pgvector` is installed; `document_chunks.embedding` is `vector(1024)`.
@@ -60,11 +63,12 @@ because the CLI needs the owner password. Files live in `prisma/migrations/`.
 A user in one institution sees nothing from the other. That is the P0-6 acceptance test,
 passed against the live database rather than asserted.
 
-## Known gap
+## Known gap — self-signup lands in the first institution
 
-The April seed wrote placeholder ids (`demo-teacher-1`) into `users.supabase_id`, so those
-rows cannot sign in. A fresh seed must create real Supabase auth users (admin API) and map
-the returned uuids — otherwise a real login lands on empty states.
+`syncUserAction` now takes only a join code and reads identity from the session, but a teacher
+who signs up without one is placed in the first institution row. There is no institution picker,
+and no path for an operator to move an account afterwards.
+
 
 ## Storage
 
@@ -113,5 +117,6 @@ Port 5432 is session mode, which behaves like a normal connection for Prisma. (P
 is transaction mode; `aws-0` for this region does not host the tenant, `aws-1` does.)
 
 `/api/health` returns `{"ok":true,"db":"up"}` and is excluded from the auth middleware so
-the host can poll it. It answers 503 with the driver message when the database is
-unreachable — which is how the IPv6 problem was found in the first place.
+the host can poll it, and it is `no-store` so a cache cannot report a stale "ok". It answers
+503 with `{ ok: false, db: "down", ms }`; the driver message stays in the server log, so an
+unauthenticated caller learns nothing about the connection.
