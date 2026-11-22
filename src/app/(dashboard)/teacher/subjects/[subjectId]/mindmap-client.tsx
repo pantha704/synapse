@@ -13,7 +13,12 @@ interface MindmapClientProps {
 
 export function MindmapClient({ subjectId, subjectName, initialNodes, initialEdges }: MindmapClientProps) {
   const handleSave = async (nodes: Node[], edges: Edge[]) => {
-    await saveMindmapLayout(subjectId, nodes, edges);
+    const result = await saveMindmapLayout(subjectId, nodes, edges);
+    if (!result?.success) {
+      // the action reports failures in its return value, so throwing it away
+      // meant an expired session or a foreign node still toasted "saved"
+      throw new Error(result?.error ?? "Could not save the layout");
+    }
   };
 
   return (

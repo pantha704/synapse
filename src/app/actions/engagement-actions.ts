@@ -7,21 +7,6 @@ import { createClient } from '@/utils/supabase/server';
 
 // ─── Event Logging ───────────────────────────────────────────────
 
-export async function logEngagementEvent(
-  studentId: string,
-  type: EventType,
-  metadata?: Record<string, unknown>
-) {
-  await prisma.engagementEvent.create({
-    data: {
-      studentId,
-      type,
-      metadata: metadata ? JSON.stringify(metadata) : undefined
-    }
-  });
-
-  revalidatePath('/teacher/analytics');
-}
 
 // ─── Engagement Classification ───────────────────────────────────
 
@@ -82,15 +67,22 @@ export async function getBatchEngagement(batchId: string): Promise<StudentEngage
 
   // topics taught in this batch only — a global count made every percentage
   // collapse toward zero as other tenants added curriculum
-  const totalTopics = await prisma.topicNode.count({
+  const batchTopics = await prisma.topicNode.findMany({
     where: { subject: { batches: { some: { batchId } } } },
+    select: { id: true },
   });
+  const totalTopics = batchTopics.length;
+  const inBatch = new Set(batchTopics.map((t) => t.id));
 
   return batchStudents.map(({ student }) => {
     const events = student.engagementEvents;
     const lastActive = events[0]?.createdAt || null;
     const eventCount7d = events.length;
-    const topicsCompleted = student.studentProgress.filter(p => p.status === 'COMPLETED').length;
+    // a student enrolled in two batches used to count every completion they had,
+    // so one roster row could read 200%
+    const topicsCompleted = student.studentProgress.filter(
+      (p) => p.status === 'COMPLETED' && inBatch.has(p.topicId)
+    ).length;
     const progressPercent = totalTopics > 0 ? Math.round((topicsCompleted / totalTopics) * 100) : 0;
 
     // Classification logic

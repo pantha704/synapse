@@ -56,6 +56,7 @@ export function chunkText(text: string): string[] {
   if (!clean) return [];
 
   const chunks: string[] = [];
+  const rejected: string[] = [];
   let start = 0;
 
   while (start < clean.length) {
@@ -83,6 +84,7 @@ export function chunkText(text: string): string[] {
 
     const chunk = clean.slice(start, cut).trim();
     if (isUseful(chunk)) chunks.push(chunk);
+    else if (chunk.length >= 10) rejected.push(chunk);
 
     if (cut >= clean.length) break;
 
@@ -109,6 +111,19 @@ export function chunkText(text: string): string[] {
     start = Math.max(next, start + 1);
   }
 
+  // A formula-heavy document fails the prose test on every chunk. Returning []
+  // indexed nothing while the upload reported success, and the retriever is
+  // better off with dense text than with silence — but a page of dot leaders is
+  // still worthless, so only chunks with real content are salvaged.
+  if (chunks.length === 0) {
+    return rejected.filter((chunk) => {
+      const visible = chunk.replace(/\s/g, "").length;
+      const alnum = chunk.replace(/[^a-z0-9]/gi, "").length;
+      const dotLeaders = (chunk.match(/\.\s*\./g) ?? []).length;
+      // dense text yes; a dotted index is never worth retrieving
+      return visible > 0 && alnum / visible > 0.3 && dotLeaders < 5;
+    });
+  }
   return chunks;
 }
 

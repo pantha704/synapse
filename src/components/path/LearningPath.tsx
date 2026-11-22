@@ -106,7 +106,7 @@ export function LearningPathNode({ node, index }: LearningPathNodeProps) {
           >
             {node.status === "in-progress" ? "In Progress" : node.status === "completed" ? "Completed" : "Locked"}
           </div>
-          <h3 className="font-headline text-xl font-bold text-white">{node.title}</h3>
+          <h3 className="text-xl font-bold text-white">{node.title}</h3>
           <p className="text-xs text-white/60 mt-1">{node.description}</p>
         </div>
       </div>

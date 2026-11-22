@@ -6,20 +6,20 @@ import { TrendingUp, AlertTriangle, Clock, CheckCircle2 } from "lucide-react";
 
 const statusConfig: Record<EngagementStatus, { color: string; bg: string; icon: typeof CheckCircle2; label: string }> = {
   progressing: {
-    color: "text-emerald-600",
-    bg: "bg-emerald-50 border-emerald-200",
+    color: "text-emerald-300",
+    bg: "bg-emerald-500/10",
     icon: CheckCircle2,
     label: "Progressing"
   },
   stuck: {
-    color: "text-amber-600",
-    bg: "bg-amber-50 border-amber-200",
+    color: "text-amber-300",
+    bg: "bg-amber-500/10",
     icon: AlertTriangle,
     label: "Stuck"
   },
   inactive: {
-    color: "text-red-500",
-    bg: "bg-red-50 border-red-200",
+    color: "text-red-300",
+    bg: "bg-red-500/10",
     icon: Clock,
     label: "Inactive"
   }
@@ -38,7 +38,7 @@ export function StudentStatusCard({ student }: StudentStatusCardProps) {
     : "Never";
 
   return (
-    <div className={`rounded-xl border p-4 ${config.bg} transition-all hover:shadow-md`}>
+    <div className={`rounded-xl border p-4 ${config.bg} border-white/[0.08] transition-all hover:shadow-md`}>
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
           <InitialsAvatar
@@ -47,11 +47,11 @@ export function StudentStatusCard({ student }: StudentStatusCardProps) {
             className="size-10"
           />
           <div>
-            <h4 className="text-sm font-semibold text-gray-900">{student.studentName || "Anonymous"}</h4>
-            <p className="text-[10px] text-gray-500">{student.email}</p>
+            <h4 className="text-sm font-semibold text-white">{student.studentName || "Anonymous"}</h4>
+            <p className="text-[10px] text-white/60">{student.email}</p>
           </div>
         </div>
-        <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold ${config.color} bg-white/80`}>
+        <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold ${config.color} bg-white/[0.06]`}>
           <Icon className="w-3 h-3" />
           {config.label}
         </div>
@@ -59,21 +59,21 @@ export function StudentStatusCard({ student }: StudentStatusCardProps) {
 
       <div className="grid grid-cols-3 gap-3">
         <div className="text-center">
-          <p className="text-lg font-bold text-gray-900">{student.progressPercent}%</p>
-          <p className="text-[9px] text-gray-500 uppercase tracking-wider">Progress</p>
+          <p className="text-lg font-bold text-white">{student.progressPercent}%</p>
+          <p className="text-[9px] text-white/55 uppercase tracking-wider">Progress</p>
         </div>
         <div className="text-center">
-          <p className="text-lg font-bold text-gray-900">{student.topicsCompleted}</p>
-          <p className="text-[9px] text-gray-500 uppercase tracking-wider">Topics</p>
+          <p className="text-lg font-bold text-white">{student.topicsCompleted}</p>
+          <p className="text-[9px] text-white/55 uppercase tracking-wider">Topics</p>
         </div>
         <div className="text-center">
-          <p className="text-lg font-bold text-gray-900">{student.eventCount7d}</p>
-          <p className="text-[9px] text-gray-500 uppercase tracking-wider">Events (7d)</p>
+          <p className="text-lg font-bold text-white">{student.eventCount7d}</p>
+          <p className="text-[9px] text-white/55 uppercase tracking-wider">Events (7d)</p>
         </div>
       </div>
 
-      <div className="mt-3 pt-3 border-t border-gray-200/50">
-        <p className="text-[10px] text-gray-400 flex items-center gap-1">
+      <div className="mt-3 pt-3 border-t border-white/[0.08]">
+        <p className="text-[10px] text-white/55 flex items-center gap-1">
           <Clock className="w-3 h-3" />
           Last active: {timeAgo}
         </p>
@@ -98,9 +98,9 @@ export function EngagementSummary({ total, progressing, stuck, inactive, avgProg
   ];
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5">
+    <div className="rounded-xl border border-white/[0.08] bg-[hsl(220,15%,10%)]/60 p-5">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-gray-900">Class Engagement</h3>
+        <h3 className="text-sm font-semibold text-white">Class Engagement</h3>
         <div className="flex items-center gap-1.5 text-emerald-600">
           <TrendingUp className="w-4 h-4" />
           <span className="text-sm font-bold">{avgProgress}% avg</span>
@@ -125,7 +125,7 @@ export function EngagementSummary({ total, progressing, stuck, inactive, avgProg
           <div key={s.label} className="flex items-center gap-2">
             <div className={`w-2.5 h-2.5 rounded-full ${s.color}`} />
             <span className="text-xs text-gray-600">{s.label}</span>
-            <span className="text-xs font-bold text-gray-900">{s.value}</span>
+            <span className="text-xs font-bold text-white">{s.value}</span>
           </div>
         ))}
       </div>

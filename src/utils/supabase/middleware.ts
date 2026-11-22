@@ -1,8 +1,19 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+/** Routes that need a session. Everything else falls through to Next, so an
+ *  unknown path returns its real 404 instead of a login redirect. */
+const PROTECTED_PREFIXES = ["/teacher", "/student", "/admin"];
+
 export async function updateSession(request: NextRequest) {
   const response = NextResponse.next({ request });
+  const pathname = request.nextUrl.pathname;
+
+  // Nothing to protect and nothing to resolve — do not even ask Supabase, so a
+  // typo'd URL, a crawler or an uptime probe gets an answer instead of a 307.
+  if (!PROTECTED_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) {
+    return response;
+  }
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -26,17 +37,10 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isAuthRoute =
-    request.nextUrl.pathname.startsWith("/api/health") ||
-    request.nextUrl.pathname.startsWith("/no-access") ||
-    request.nextUrl.pathname.startsWith("/login") ||
-    request.nextUrl.pathname.startsWith("/auth") ||
-    request.nextUrl.pathname === "/" ||
-    request.nextUrl.pathname.startsWith("/error");
-
-  if (!user && !isAuthRoute) {
+  if (!user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    url.search = `?next=${encodeURIComponent(pathname)}`;
     return NextResponse.redirect(url);
   }
 

@@ -31,7 +31,13 @@ export async function createAssignment({ batchId, topicId, title, instructions, 
   if (trimmed.length < 3) return { ok: false as const, error: "Title needs at least 3 characters" };
 
   const batch = await prisma.batch.findFirst({
-    where: { id: batchId, ...(user.role === "TEACHER" ? { teacherId: user.id } : {}) },
+    // ADMIN used to hit this branch unfiltered: any batch id in any tenant passed.
+    where: {
+      id: batchId,
+      ...(user.role === "TEACHER"
+        ? { teacherId: user.id }
+        : { institutionId: user.institutionId }),
+    },
     include: { subjects: { select: { subjectId: true } } },
   });
   if (!batch) return { ok: false as const, error: "Batch not found for this account" };

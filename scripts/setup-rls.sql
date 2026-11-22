@@ -264,3 +264,46 @@ revoke all on function public.join_batch_by_code(text) from public, anon;
 revoke all on function public.current_institution_id() from public, anon;
 revoke all on function public.current_user_id() from public, anon;
 grant execute on function public.join_batch_by_code(text) to authenticated, synapse_app;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- The browser client only reads. Every write in this app goes through Prisma as
+-- synapse_app, so table-level DML for `authenticated` was pure attack surface:
+-- a student could rewrite curriculum, self-enrol into another tenant's batch and
+-- create read receipts for anyone's announcement. Policies cannot fix a grant.
+-- ─────────────────────────────────────────────────────────────────────────────
+revoke insert, update, delete, truncate on all tables in schema public from authenticated, anon;
+grant select on all tables in schema public to authenticated;
+grant update (name, avatar_url) on public.users to authenticated;
+
+-- and it must hold for tables no migration has created yet
+alter default privileges in schema public revoke insert, update, delete, truncate on tables from anon, authenticated;
+alter default privileges in schema public revoke execute on functions from public, anon;
+alter default privileges in schema public grant select on tables to authenticated;
+
+-- ai_sessions.student_id stores the Supabase uid (the FK points at
+-- users.supabase_id) while current_user_id() returns users.id, so the policies
+-- could never be satisfied: cuid -> FK violation, uid -> RLS denial.
+create or replace function public.current_supabase_id()
+returns text language sql stable security definer set search_path to 'public' as $$
+  select u.supabase_id from users u
+  where u.supabase_id = nullif(current_setting('request.jwt.claims', true), '')::json ->> 'sub'
+  limit 1;
+$$;
+revoke all on function public.current_supabase_id() from public, anon;
+grant execute on function public.current_supabase_id() to authenticated, synapse_app;
+
+drop policy if exists ai_sessions_own on public.ai_sessions;
+create policy ai_sessions_own on public.ai_sessions
+  for all to authenticated
+  using (student_id = current_supabase_id())
+  with check (student_id = current_supabase_id());
+
+drop policy if exists ai_messages_read on public.ai_messages;
+create policy ai_messages_read on public.ai_messages
+  for select to authenticated
+  using (exists (select 1 from ai_sessions s where s.id = ai_messages.session_id and s.student_id = current_supabase_id()));
+
+drop policy if exists ai_messages_insert on public.ai_messages;
+create policy ai_messages_insert on public.ai_messages
+  for insert to authenticated
+  with check (exists (select 1 from ai_sessions s where s.id = ai_messages.session_id and s.student_id = current_supabase_id()));

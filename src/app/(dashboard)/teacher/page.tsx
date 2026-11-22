@@ -22,7 +22,7 @@ async function getDashboardData(): Promise<DashboardData> {
           _count: {
             select: { students: true, subjects: true }
           },
-          subjects: { select: { subjectId: true }, take: 1 },
+          subjects: { select: { subjectId: true }, orderBy: { subjectId: "asc" }, take: 1 },
         }
       }
     }
@@ -37,23 +37,27 @@ async function getDashboardData(): Promise<DashboardData> {
   // Aggregate data to find total subjects taught
   const totalSubjects = teacher.taughtBatches.reduce((acc, b) => acc + b._count.subjects, 0);
 
-  // completed topics / (students x topics) across the batches this teacher owns.
-  // A row ratio would read 100% after a single completion, so the denominator is
-  // the work that could be done, not the work that was recorded.
+  // completed topics / (students x topics), summed per batch.
+  // Using the union of topics × the union of students inflates the denominator:
+  // two batches of 10 students and 10 topics is 400 opportunities, not 800,
+  // because no student can complete the other batch's topics.
   const batchIds = teacher.taughtBatches.map((b) => b.id);
-  const [topics, students, completed] = await Promise.all([
-    prisma.topicNode.count({
-      where: { subject: { batches: { some: { batchId: { in: batchIds } } } } },
-    }),
-    prisma.batchStudent.count({ where: { batchId: { in: batchIds } } }),
-    prisma.studentProgress.count({
-      where: {
-        status: "COMPLETED",
-        topic: { subject: { batches: { some: { batchId: { in: batchIds } } } } },
-      },
-    }),
-  ]);
-  const opportunity = students * topics;
+  const perBatch = await Promise.all(
+    batchIds.map(async (batchId) => {
+      const [topics, students] = await Promise.all([
+        prisma.topicNode.count({ where: { subject: { batches: { some: { batchId } } } } }),
+        prisma.batchStudent.count({ where: { batchId } }),
+      ]);
+      return topics * students;
+    })
+  );
+  const completed = await prisma.studentProgress.count({
+    where: {
+      status: "COMPLETED",
+      topic: { subject: { batches: { some: { batchId: { in: batchIds } } } } },
+    },
+  });
+  const opportunity = perBatch.reduce((a, b) => a + b, 0);
   const avgProgress = opportunity ? Math.min(100, Math.round((completed / opportunity) * 100)) : 0;
 
   return {

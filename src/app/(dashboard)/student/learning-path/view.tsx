@@ -117,9 +117,9 @@ export function StudentPathView({ nodes, stats, peers, currentStudentId, announc
             )}
           </div>
 
-          <AnnouncementsPanel items={announcements} canPost={false} batchId={batchId} />
+          <AnnouncementsPanel items={announcements} canPost={false} batchId={batchId} dark />
 
-          <AssignmentsPanel items={assignments} canSubmit />
+          <AssignmentsPanel items={assignments} canSubmit dark />
 
           {peers.length > 0 && <PeerComparisonPanel peers={peers} currentStudentId={currentStudentId} />}
 

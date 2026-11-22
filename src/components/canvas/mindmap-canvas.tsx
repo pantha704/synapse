@@ -91,6 +91,7 @@ export function MindmapCanvas({
   return (
     <div className="w-full h-full relative border rounded-lg overflow-hidden bg-background">
       <ReactFlow
+        colorMode="dark"
         nodes={nodes}
         edges={edges}
         onNodesChange={readOnly ? undefined : onNodesChange}
@@ -107,8 +108,8 @@ export function MindmapCanvas({
         className="touch-none"
       >
         <Controls />
-        <MiniMap zoomable pannable className="border rounded-md shadow-sm" />
-        <Background gap={12} size={1} />
+        <MiniMap zoomable pannable className="!bg-[hsl(220,15%,10%)] !border-white/[0.08] rounded-md shadow-sm" />
+        <Background gap={12} size={1} color="rgba(255,255,255,0.10)" />
       </ReactFlow>
 
       {!readOnly && onSave && (

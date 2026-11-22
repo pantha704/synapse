@@ -57,8 +57,8 @@ export function TopicNode({ data, selected }: NodeProps<TopicNodeType>) {
             <h3 className={cn(
               "font-semibold text-sm line-clamp-2",
               data.isLocked ? "text-muted-foreground" : 
-              isCompleted ? "text-emerald-700" :
-              isInProgress ? "text-amber-700" :
+              isCompleted ? "text-emerald-300" :
+              isInProgress ? "text-amber-300" :
               "text-foreground"
             )}>
               {data.title}

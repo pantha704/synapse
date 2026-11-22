@@ -29,7 +29,13 @@ export async function importStudentsCsv(csv: string, batchId: string): Promise<I
   if (!user || (user.role !== "TEACHER" && user.role !== "ADMIN")) return fail("Only teachers or admins can import");
 
   const batch = await prisma.batch.findFirst({
-    where: { id: batchId, ...(user.role === "TEACHER" ? { teacherId: user.id } : {}) },
+    // ADMIN used to hit this branch unfiltered: any batch id in any tenant passed.
+    where: {
+      id: batchId,
+      ...(user.role === "TEACHER"
+        ? { teacherId: user.id }
+        : { institutionId: user.institutionId }),
+    },
   });
   if (!batch) return fail("Batch not found for this account");
 

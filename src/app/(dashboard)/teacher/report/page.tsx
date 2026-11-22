@@ -16,8 +16,8 @@ export default async function TeacherReportPage() {
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-white">Class progress report</h1>
-          <p className="text-white/60 mt-1 text-sm">
+          <h1 className="text-2xl font-semibold text-white print:text-gray-900">Class progress report</h1>
+          <p className="text-white/60 print:text-gray-600 mt-1 text-sm">
             {batchName ? `${batchName} · ${rows.length} students` : "No batch assigned yet"}
           </p>
         </div>

@@ -21,9 +21,18 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        // a shared cache honouring this would pin the login HTML for a year
+        source: "/login",
+        headers: [{ key: "Cache-Control", value: "no-store, must-revalidate" }],
+      },
+      {
+        source: "/api/health",
+        headers: [{ key: "Cache-Control", value: "no-store, must-revalidate" }],
+      },
+      {
         source: "/:path*",
         headers: [
-          { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains; preload" },
+          { key: "Strict-Transport-Security", value: "max-age=31536000" },
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "X-Frame-Options", value: "DENY" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
@@ -35,9 +44,10 @@ const nextConfig: NextConfig = {
               // Next injects inline bootstrap scripts; 'unsafe-inline' is required there.
               "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: https:",
+              // avatars are rendered locally now; resources come from Supabase only
+              `img-src 'self' data: blob: https://${supabaseHost}`,
               "font-src 'self' data:",
-              `connect-src 'self' https://${supabaseHost} https://api.groq.com`,
+              `connect-src 'self' https://${supabaseHost} wss://${supabaseHost} https://api.groq.com`,
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",

@@ -42,7 +42,7 @@ export function PeerComparisonPanel({ peers, currentStudentId }: PeerComparisonP
               transition={{ delay: index * 0.08 }}
               className={`flex items-center gap-2.5 p-2.5 rounded-lg transition-all ${
                 isCurrentUser
-                  ? "bg-indigo-50/80 ring-1 ring-indigo-200"
+                  ? "bg-violet-500/15 ring-1 ring-violet-400/30"
                   : "bg-white/[0.03] hover:bg-white/[0.06]"
               }`}
             >

@@ -1,5 +1,6 @@
 'use client';
 
+import { toast } from "sonner";
 import { useState } from 'react';
 import { Node, Edge } from '@xyflow/react';
 import { MindmapCanvas } from '@/components/canvas/mindmap-canvas';
@@ -50,7 +51,14 @@ export function StudentMindmapClient({
 
   const handleMarkComplete = async (resourceId: string) => {
     if (!panelState.topicId) return;
-    await markResourceCompleteAction(resourceId, panelState.topicId, subjectId);
+    try {
+      await markResourceCompleteAction(resourceId, panelState.topicId, subjectId);
+      toast.success("Marked complete");
+    } catch (error) {
+      // the action throws on an expired session or a resource removed meanwhile;
+      // an unhandled rejection made the click look ignored
+      toast.error(error instanceof Error ? error.message : "Could not save that");
+    }
   };
 
   return (

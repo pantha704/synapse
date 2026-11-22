@@ -47,15 +47,10 @@ export default function LoginPage() {
         });
         if (error) throw error;
         
-        // Sync to prisma
+        // The auth account exists; the server action reads identity and the
+        // chosen role from the session/metadata, never from these arguments.
         if (data.user) {
-          await syncUserAction(
-            data.user.id,
-            email,
-            name,
-            role === "student" ? "STUDENT" : "TEACHER",
-            joinCode
-          );
+          await syncUserAction(role === "student" ? joinCode : undefined);
         }
 
         router.push("/");
@@ -132,6 +127,7 @@ export default function LoginPage() {
                         key={r}
                         type="button"
                         onClick={() => setRole(r)}
+                        aria-pressed={role === r}
                         className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${
                           role === r
                             ? "bg-violet-500/20 text-violet-300 border border-violet-500/30"
@@ -170,6 +166,7 @@ export default function LoginPage() {
 
               <Input
                 type="email"
+                    autoComplete="email"
                 placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -180,18 +177,19 @@ export default function LoginPage() {
               <div className="relative">
                 <Input
                   type={showPassword ? "text" : "password"}
+                  autoComplete={mode === "signup" ? "new-password" : "current-password"}
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/55 h-11 pr-10"
+                  className="bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/55 h-11 pr-12"
                 />
                 <button
                   type="button"
                   aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute right-1 top-1/2 grid size-11 -translate-y-1/2 place-items-center rounded-md text-white/60 transition-colors hover:bg-white/[0.06] hover:text-white"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white/60 transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -234,7 +232,7 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full h-11 bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 text-white font-medium transition-all duration-200"
+                className="w-full h-11 bg-gradient-to-r from-violet-700 to-violet-600 hover:from-violet-600 hover:to-violet-500 text-white font-medium transition-all duration-200"
               >
                 {loading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

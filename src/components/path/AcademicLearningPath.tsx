@@ -22,7 +22,7 @@ export function AcademicPathNode({ node, index }: AcademicPathNodeProps) {
       borderColor: "border-emerald-200",
       iconBg: "bg-emerald-100",
       iconColor: "text-emerald-600",
-      titleColor: "text-emerald-900",
+      titleColor: "text-emerald-300",
       Icon: CheckCircle2,
     },
     "in-progress": {
@@ -30,7 +30,7 @@ export function AcademicPathNode({ node, index }: AcademicPathNodeProps) {
       borderColor: "border-indigo-200",
       iconBg: "bg-indigo-100",
       iconColor: "text-indigo-600",
-      titleColor: "text-indigo-900",
+      titleColor: "text-indigo-300",
       Icon: BookOpen,
     },
     upcoming: {
@@ -38,7 +38,7 @@ export function AcademicPathNode({ node, index }: AcademicPathNodeProps) {
       borderColor: "border-amber-200",
       iconBg: "bg-amber-100",
       iconColor: "text-amber-600",
-      titleColor: "text-amber-900",
+      titleColor: "text-amber-300",
       Icon: Clock,
     },
     locked: {
@@ -115,7 +115,7 @@ export function AcademicLearningPath({ nodes, title }: AcademicLearningPathProps
       <div className="max-w-4xl mx-auto mb-8 flex items-center justify-between">
         <div>
           <p className="text-[10px] uppercase tracking-widest text-violet-300 font-semibold">{title ?? "Your course"}</p>
-          <h2 className="text-xl font-bold text-white mt-1">Learning Path</h2>
+          <h1 className="text-xl font-bold text-white mt-1">Learning Path</h1>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-white/60">{nodes.length} topic{nodes.length === 1 ? "" : "s"}</span>

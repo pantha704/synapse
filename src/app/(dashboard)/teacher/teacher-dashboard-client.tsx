@@ -118,7 +118,7 @@ export default function TeacherDashboardClient({ dataPromise }: { dataPromise: P
                       </Badge>
                     </div>
                     <p className="text-xs text-white/60 mt-0.5">
-                      {batch._count.students} students · {batch._count.subjects} subjects
+                      {batch._count.students} student{batch._count.students === 1 ? "" : "s"} · {batch._count.subjects} subject{batch._count.subjects === 1 ? "" : "s"}
                     </p>
                   </div>
                     <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-violet-300 group-hover:translate-x-1 transition-all duration-200" />

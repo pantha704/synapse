@@ -40,7 +40,18 @@ export async function markAnnouncementRead(announcementId: string) {
   const user = await currentDbUser();
   if (!user) return { ok: false as const, error: "Not signed in" };
 
-  const announcement = await prisma.announcement.findUnique({ where: { id: announcementId } });
+  // findUnique on the id alone let any signed-in user create a receipt on
+  // another tenant's announcement and read ok/error as an existence oracle
+  const announcement = await prisma.announcement.findFirst({
+    where: {
+      id: announcementId,
+      batch: {
+        institutionId: user.institutionId,
+        ...(user.role === "STUDENT" ? { students: { some: { studentId: user.id } } } : {}),
+      },
+    },
+    select: { id: true },
+  });
   if (!announcement) return { ok: false as const, error: "Announcement not found" };
 
   await prisma.announcementRead.upsert({
