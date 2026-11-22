@@ -35,20 +35,15 @@ interface UserInfo {
 const NAV_ITEMS: Record<string, { label: string; href: string; icon: React.ElementType }[]> = {
   TEACHER: [
     { label: "Dashboard", href: "/teacher", icon: LayoutDashboard },
-    { label: "Subjects", href: "/teacher/subjects", icon: BookOpen },
-    { label: "Students", href: "/teacher/students", icon: Users },
+    { label: "Learning Path", href: "/teacher/learning-path", icon: BookOpen },
     { label: "Analytics", href: "/teacher/analytics", icon: BarChart3 },
   ],
   STUDENT: [
     { label: "Dashboard", href: "/student", icon: LayoutDashboard },
-    { label: "Subjects", href: "/student/subjects", icon: BookOpen },
-    { label: "Progress", href: "/student/progress", icon: BarChart3 },
+    { label: "Learning Path", href: "/student/learning-path", icon: BookOpen },
   ],
   ADMIN: [
     { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
-    { label: "Teachers", href: "/admin/teachers", icon: Users },
-    { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
-    { label: "Settings", href: "/admin/settings", icon: Settings },
   ],
 };
 

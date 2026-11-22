@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { SideNavBar } from "@/components/layout/SideNavBar";
-import { TopNavBar } from "@/components/layout/TopNavBar";
 import { StudentStatusCard, EngagementSummary } from "@/components/analytics/StudentStatusCard";
 import type { StudentEngagement, EngagementStatus } from "@/app/actions/engagement-actions";
 
@@ -54,8 +52,6 @@ export default function TeacherAnalyticsPage() {
 
   return (
     <div className="min-h-screen bg-[#fafafa]">
-      <SideNavBar />
-      <TopNavBar />
 
       <main className="ml-64 pt-16 p-8">
         {/* Header */}

@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertTriangle, Info, Users } from "lucide-react";
-import type { CriticalNode } from "@/data/mockData";
+import type { CriticalNode } from "@/lib/path-types";
 
 interface BatchPulseProps {
   activity: number;

@@ -2,7 +2,7 @@
 
 import { CheckCircle2, Lock, BrainCircuit } from "lucide-react";
 import { motion } from "framer-motion";
-import type { LearningNode } from "@/data/mockData";
+import type { LearningNode } from "@/lib/path-types";
 
 interface LearningPathNodeProps {
   node: LearningNode;

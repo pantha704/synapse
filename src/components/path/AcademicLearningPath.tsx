@@ -2,7 +2,7 @@
 
 import { CheckCircle2, BookOpen, Lock } from "lucide-react";
 import { motion } from "framer-motion";
-import type { LearningNode } from "@/data/mockData";
+import type { LearningNode } from "@/lib/path-types";
 
 interface AcademicPathNodeProps {
   node: LearningNode;

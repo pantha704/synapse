@@ -2,7 +2,7 @@
 
 import { Trophy, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { motion } from "framer-motion";
-import type { PeerComparison } from "@/data/mockData";
+import type { PeerComparison } from "@/lib/path-types";
 
 interface PeerComparisonPanelProps {
   peers: PeerComparison[];
