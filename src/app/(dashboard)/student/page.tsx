@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import StudentDashboardClient, { DashboardData, SubjectData } from "./student-dashboard-client";
 import { createClient } from "@/utils/supabase/server";
@@ -11,7 +11,7 @@ async function getDashboardData(): Promise<DashboardData> {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    notFound();
+    redirect("/login");
   }
 
   const student = await prisma.user.findUnique({
@@ -41,7 +41,7 @@ async function getDashboardData(): Promise<DashboardData> {
   });
 
   if (!student) {
-    notFound();
+    redirect("/no-access");
   }
 
   // Flatten subjects from enrolled batches

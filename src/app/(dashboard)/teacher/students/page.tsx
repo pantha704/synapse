@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/utils/supabase/server";
 import { ImportForm } from "./import-form";
@@ -10,7 +10,7 @@ export default async function TeacherStudentsPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) notFound();
+  if (!user) redirect("/login");
 
   const teacher = await prisma.user.findUnique({
     where: { supabaseId: user.id },
@@ -23,7 +23,7 @@ export default async function TeacherStudentsPage() {
       },
     },
   });
-  if (!teacher) notFound();
+  if (!teacher) redirect("/no-access");
 
   const batches = teacher.taughtBatches;
   const roster = batches.flatMap((b) =>

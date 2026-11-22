@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import TeacherDashboardClient, { DashboardData } from "./teacher-dashboard-client";
 import { createClient } from "@/utils/supabase/server";
@@ -11,7 +11,7 @@ async function getDashboardData(): Promise<DashboardData> {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    notFound();
+    redirect("/login");
   }
 
   const teacher = await prisma.user.findUnique({
@@ -28,7 +28,7 @@ async function getDashboardData(): Promise<DashboardData> {
   });
 
   if (!teacher) {
-    notFound();
+    redirect("/no-access");
   }
 
   const activeBatches = teacher.taughtBatches.length;

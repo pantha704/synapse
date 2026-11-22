@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { Node, Edge } from '@xyflow/react';
 import { TopicNodeData } from '@/components/canvas/topic-node';
 import { ChapterNodeData } from '@/components/canvas/chapter-node';
@@ -32,7 +32,7 @@ export default async function StudentSubjectMindmapPage({
   });
 
   if (!student) {
-    return notFound();
+    redirect("/no-access");
   }
 
   const studentId = student.id;
