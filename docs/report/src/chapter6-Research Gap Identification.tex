@@ -1,0 +1,52 @@
+\chapter{Research Gap Identification}
+\label{Research_Gap_Identification}
+
+The literature reviewed in Chapter 4 points to several gaps in how current educational platforms handle progress tracking, visualization, and AI assistance. This chapter lists each gap and describes how Synapse addresses it.
+
+\section{Gap 1: No Visual Progress Mapping in LMS Platforms}
+
+LMS platforms like Moodle, Canvas, and Google Classroom show student progress as lists of assignments and numerical scores. There is no visual representation that shows how topics connect to each other or where a student sits in the overall course structure. A student looking at their dashboard sees rows of grades, not a map of what they have covered and what lies ahead.
+
+\textbf{How Synapse addresses this:} The system replaces the list view with an interactive mindmap. Each topic is a node, and nodes are arranged to show the structure of the syllabus. Students can see the full course layout, zoom into specific sections, and track their progress through four visual states: not started, upcoming, in progress, and completed.
+
+\section{Gap 2: No Dual Progress Tracking}
+
+Current tools track either the teacher's schedule or the student's grades, but not both side by side. There is no built-in way to compare what the teacher has covered with what each student has actually understood. Teachers often do not notice the mismatch until final exams.
+
+\textbf{How Synapse addresses this:} The system keeps two timelines: one for the teacher's delivery and one for each student's progress. Comparing them produces a gap analysis: the system flags the topics a teacher has opened that a given student has not begun, and bands the class by engagement.
+
+\section{Gap 3: Limited Use of Gamification in General-Purpose LMS}
+
+Gamification has been shown to increase student engagement, but it mostly appears in specialized apps like Duolingo and Khan Academy. These platforms target specific subjects and are not general purpose LMS tools. Wider LMS platforms have not adopted visual progression mechanics.
+
+\textbf{How Synapse addresses this:} The mindmap naturally works like a skill tree. Students watch nodes move from not started, through upcoming and in progress, to completed as they work through the material. The system also tracks XP points and awards engagement badges.
+
+\section{Gap 4: AI Assistants Without Curriculum Scope Control}
+
+AI chatbots used in education typically run on general purpose language models that pull from their full training data, not from the specific course the student is taking. The answers may be irrelevant to the syllabus or outright wrong. There is no guarantee the AI is aligned with what the teacher actually teaches.
+
+\textbf{How Synapse addresses this:} The AI assistant uses RAG scoped to the subject's uploaded materials. The vector search is filtered by subject ID, so the model can only retrieve and reference documents the teacher has approved for that course.
+
+\section{Gap 5: Lack of Multi-Tenant Support in EdTech Platforms}
+
+Many LMS tools are designed for a single institution. Running them for multiple schools means separate installations or complicated workarounds. This makes it hard for a platform provider to serve several institutions from one deployment without data leaking between them.
+
+\textbf{How Synapse addresses this:} PostgreSQL Row-Level Security enforces data isolation at the database level. Every table carries a policy keyed to the caller's institution, so a query issued by one institution returns nothing belonging to another; the single sanctioned exception is a \texttt{SECURITY DEFINER} function that lets a student join a batch with a shared code.
+
+\section{Summary of Research Gaps}
+
+\begin{table}[H]
+\centering
+\caption{Summary of Research Gaps and Proposed Solutions}
+\label{tab:research_gaps}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|c|p{5cm}|p{5cm}|}
+\hline
+\thead{Gap \#} & \thead{Identified Gap} & \thead{Proposed Solution} \\ \hline
+1 & No visual progress mapping in LMS & Interactive mindmap with node states \\ \hline
+2 & No dual progress tracking & Teacher vs Student timeline comparison \\ \hline
+3 & Limited gamification in LMS & Skill-tree style mindmap with XP and badges \\ \hline
+4 & AI without curriculum scope & RAG scoped to teacher-approved materials \\ \hline
+5 & No multi-tenant support & Row-Level Security for data isolation \\ \hline
+\end{tabular}}
+\end{table}

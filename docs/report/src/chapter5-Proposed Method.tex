@@ -1,0 +1,135 @@
+\chapter{Proposed Methodology}
+
+This chapter describes how Synapse is designed and how its main components fit together.
+
+\section{System Overview}
+
+Synapse is a web-based LMS that replaces the usual list of topics with an interactive mindmap. It runs as a single Next.js application backed by Supabase and supports three user roles: Administrators, Teachers, and Students.
+
+A teacher creates a course, builds the syllabus as a mindmap on a drag-and-drop canvas, and attaches materials (PDFs, links, assignments) to each topic node. Students see the same map and interact with it. Each node has one of four states:
+
+\begin{itemize}
+    \item \textbf{Not started} -- The teacher has not opened this topic for the class yet.
+    \item \textbf{Upcoming} -- The teacher has opened it, but this student has not begun.
+    \item \textbf{In progress} -- The student has started working on this topic.
+    \item \textbf{Completed} -- The student has marked it finished.
+\end{itemize}
+
+\section{System Architecture}
+
+The system has three layers:
+
+\begin{enumerate}
+    \item \textbf{Frontend Layer:} Next.js 16 with App Router, Tailwind CSS v4, Framer Motion, Base UI components. The mindmap canvas uses React Flow. State management is handled by Zustand.
+    \item \textbf{Backend Layer:} Next.js Server Actions and API Routes handle authentication and business logic.
+    \item \textbf{Data Layer:} PostgreSQL with a Row-Level Security policy on every table for multi-tenant isolation. Supabase Auth for authentication. pgvector for document embeddings, with PostgreSQL full-text search as the retrieval fallback. Supabase Storage for file uploads.
+\end{enumerate}
+
+Figure \ref{fig:system_arch} shows the high-level system architecture.
+
+\begin{figure}[H]
+    \centering
+    \resizebox{\textwidth}{!}{
+    \begin{tikzpicture}[
+        node distance=1.5cm and 2cm,
+        block/.style={rectangle, draw=blue!80!black, fill=blue!5, thick, rounded corners=4pt, minimum width=3.5cm, minimum height=1.2cm, text centered, font=\sffamily\small},
+        db/.style={cylinder, draw=green!60!black, fill=green!5, thick, shape border rotate=90, aspect=0.25, minimum width=2.5cm, minimum height=1.5cm, text centered, font=\sffamily\small},
+        groupbox/.style={rectangle, draw=gray!40, dashed, thick, inner sep=15pt, rounded corners=8pt, fill=gray!5, fill opacity=0.5},
+        arrow/.style={->, >=stealth, draw=gray!70, thick},
+        labelnode/.style={fill=white, text=blue!80!black, inner sep=2pt, font=\sffamily\scriptsize\itshape}
+    ]
+
+    % FRONTEND LAYER
+    \node [block] (ui) at (0, 0) {Synapse UI};
+    \node [block] (state) at (-5.5, -2.5) {Zustand Store};
+    \node [block] (api) at (0, -2.5) {Next.js API \& Server Actions};
+    \node [block] (canvas) at (5.5, -2.5) {React Flow Mindmap};
+
+    % BACKEND LAYER
+    \node [block] (mw) at (0, -5.5) {Auth Middleware};
+
+    % AI PROCESSING LAYER
+    \node [block] (groq) at (-5.5, -9.5) {Groq Inference};
+
+    % SUPABASE DATA LAYER
+    \node [block] (rls) at (0, -8.5) {Row-Level Security};
+    \node [db] (dbnode) at (0, -11) {PostgreSQL};
+    \node [block] (storage) at (5.5, -8.5) {S3 Storage};
+    \node [db] (vector) at (5.5, -11) {pgvector};
+
+    % GROUP BOXES
+    \begin{scope}[on background layer]
+        \node [groupbox, fit=(ui) (api) (state) (canvas)] (frontend) {};
+        \node [above=0.2cm of frontend.north, font=\sffamily\bfseries, color=gray!80!black] {Frontend - Next.js App Router};
+
+        \node [groupbox, fit=(mw)] (backend) {};
+        \node [right=0.2cm of backend.east, font=\sffamily\bfseries, color=gray!80!black] {Backend - Next.js API};
+
+        \node [groupbox, fit=(groq)] (ai) {};
+        \node [above=0.2cm of ai.north, font=\sffamily\bfseries, color=gray!80!black] {AI Processing Layer};
+
+        \node [groupbox, fit=(rls) (dbnode) (vector) (storage)] (supabase) {};
+        \node [above=0.2cm of supabase.north, font=\sffamily\bfseries, color=gray!80!black, xshift=1.5cm] {Supabase Data Layer};
+    \end{scope}
+
+    % CONNECTIONS
+    \draw [arrow] (ui) -- node[labelnode, right] {Server Actions} (api);
+    \draw [arrow] (ui) -- node[labelnode, sloped, above] {Updates} (state);
+    \draw [arrow] (ui) -- node[labelnode, sloped, above] {Renders} (canvas);
+
+    \draw [arrow] (api) -- (mw);
+    \draw [arrow] (api) -- node[labelnode, sloped, above, pos=0.4] {LLM Inference} (groq);
+    \draw [arrow] (api) -- node[labelnode, sloped, above, pos=0.4] {Context Qry} (vector);
+    \draw [arrow] (api) -- node[labelnode, sloped, above, pos=0.4] {Doc Upload} (storage);
+
+    \draw [arrow] (mw) -- node[labelnode, right] {Authorized Qry} (rls);
+    \draw [arrow] (rls) -- (dbnode);
+
+    \draw [arrow] (groq) -- node[labelnode, sloped, above, pos=0.7] {Grounded Answer} (vector);
+
+    \end{tikzpicture}
+    }
+    \caption{High-Level System Architecture of Synapse}
+    \label{fig:system_arch}
+\end{figure}
+
+
+\section{Key Workflows}
+
+\subsection{Multi-Tenant Onboarding}
+Each institution is a separate tenant. A Super Admin creates the institution, then an Admin adds teachers and students through CSV uploads or join codes. Row-Level Security at the database level keeps each institution's data separate from the others.
+
+\subsection{Curriculum Creation (Teacher Flow)}
+Teachers create batches and define subjects. They build the curriculum as a visual mindmap on the React Flow canvas, attaching PDFs, links, and assignments to individual topic nodes.
+
+\subsection{Learning and Progress Tracking (Student Flow)}
+Students see the mindmap for each of their subjects. Topics start unopened. As the teacher opens them for the class, they appear as upcoming for every student; each student's own node then moves to in progress and finally completed. The system records each transition.
+
+\subsection{Dual Progress Tracking}
+Two progress timelines run in parallel: the teacher's delivery schedule and each student's actual progress. Each student is then placed in one of three engagement bands --- \textcolor{green}{\textbf{Progressing}}, \textcolor{yellow}{\textbf{Stuck}}, and \textcolor{red}{\textbf{Inactive}} --- computed from the recency and type of their activity events. The system infers these states from passive signals like login frequency and time spent on resources.
+
+\subsection{AI Study Assistant (RAG Pipeline)}
+When a student asks a question, four things happen: (1) the question is converted to a vector embedding, (2) pgvector is searched for relevant chunks, filtered by the subject ID so only that course's materials are used, (3) the retrieved context and the original question go to Groq for inference, and (4) the response is streamed back to the student. The AI never sees materials outside the teacher's approved set.
+
+
+\section{Technologies Used}
+
+\begin{table}[H]
+\centering
+\caption{Technology Stack}
+\label{tab:tech_stack}
+\begin{tabular}{|l|l|}
+\hline
+\thead{Component} & \thead{Technology} \\ \hline
+Framework & Next.js 16 (App Router, Turbopack) \\ \hline
+Database & PostgreSQL with Prisma ORM \\ \hline
+Authentication & Supabase Auth (SSR) \\ \hline
+UI Styling & Tailwind CSS v4, Shadcn UI \\ \hline
+Animations & Framer Motion \\ \hline
+State Management & Zustand \\ \hline
+Mindmap Canvas & React Flow \\ \hline
+Vector Database & pgvector (Supabase) \\ \hline
+AI Inference & Groq (open-weight chat models) \\ \hline
+File Storage & Supabase Storage (S3) \\ \hline
+\end{tabular}
+\end{table}

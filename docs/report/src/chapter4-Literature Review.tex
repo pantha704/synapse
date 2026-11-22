@@ -1,0 +1,68 @@
+\chapter{Literature Review}
+\label{Literature_Review}
+
+This chapter reviews published work across the five areas that Synapse brings together: learning management systems, mind map visualization, gamification in education, learning analytics dashboards, and AI-powered educational assistants.
+
+\section{Learning Management Systems (LMS)}
+
+Dougiamas and Taylor \cite{dougiamas2004moodle} described how Moodle was built as an open-source course management system grounded in social constructivist principles. Their design lets instructors create online learning communities where students build knowledge through discussion and collaboration. Moodle became one of the most widely adopted LMS platforms, but its default interface still organizes courses as lists of resources and activities, with progress tracked mainly through grade books and completion checkboxes.
+
+Al-Samarraie and Saeed \cite{alsamarraie2018systematic} reviewed 29 studies on cloud computing tools used in blended learning environments. They grouped these tools into three categories: synchronized tools, LMS tools, and social networking tools. Their review found that while these tools support collaborative activities like file sharing, editing, and group discussion, most LMS platforms still treat content delivery as their primary function. The study did not specifically examine how students perceive their own progress within these systems, which is relevant to the present work.
+
+Bozkurt et al. \cite{bozkurt2023speculative} collected reflections from over thirty education researchers on the impact of ChatGPT and generative AI on education. Using a speculative methodology, they argued that the roles of human teachers and AI tools need to be clearly redefined. They also warned that students may struggle to distinguish between reliable and hallucinated AI-generated content, a concern directly relevant to why Synapse uses scoped AI rather than open-ended chatbots.
+
+\section{Mind Mapping in Education}
+
+Buzan and Buzan \cite{buzan2006mind} introduced mind mapping as a technique for organizing information visually, with a central idea at the middle and related concepts branching outward. They argued that this structure mirrors how the brain naturally associates ideas, and that drawing these connections helps with memory and recall. The technique has since been widely adopted as a study and brainstorming tool in both academic and professional settings.
+
+Eppler \cite{eppler2006comparison} compared four knowledge visualization formats: concept maps, mind maps, conceptual diagrams, and visual metaphors. He found that each format has specific strengths. Mind maps are well suited for representing hierarchical, tree-like relationships, which makes them a natural fit for showing the structure of a course syllabus. Concept maps, by contrast, are better for showing cross-cutting connections between topics that do not follow a strict hierarchy.
+
+Despite these findings, mind maps have remained a study aid that students use on their own. No widely used LMS has adopted a mind map as its primary navigation and progress-tracking interface. This gap is what Synapse attempts to address.
+
+\section{Gamification in Learning}
+
+Deterding et al. \cite{deterding2011game} defined gamification as the use of game design elements in non-game contexts. Their framework distinguishes between full game designs and the selective use of individual mechanics like points, levels, and progression indicators. This distinction is useful for positioning Synapse's approach: the platform borrows the skill-tree progression mechanic from role-playing games without attempting to turn the entire learning experience into a game.
+
+Hamari et al. \cite{hamari2014does} reviewed empirical studies on gamification across different domains and found that most reported positive effects on user engagement and motivation. However, the effects were not consistent across all contexts. Gamification worked better in education and health settings than in commerce or workplace environments. They also noted that positive outcomes tended to diminish over time when the game elements felt disconnected from the underlying activity.
+
+Dicheva et al. \cite{dicheva2015gamification} conducted a systematic mapping study of gamification specifically in educational contexts. They categorized the research by game mechanics used, educational level, subject area, and evaluation method. Points, badges, and leaderboards were the most commonly applied elements. The study called for more controlled experiments that measure the effect of specific game elements on learning outcomes, rather than just on engagement metrics. Visual progression systems, like the skill-tree approach used in Synapse, remain underexplored in the literature.
+
+Duolingo and Khan Academy are two commercial platforms that use gamification effectively, but both target specific subjects (language learning and mathematics, respectively). A general-purpose LMS that applies skill-tree-style visual progression to any academic syllabus has not been widely attempted.
+
+\section{Learning Analytics and Visual Dashboards}
+
+Siemens \cite{siemens2013learning} traced the emergence of learning analytics as a research discipline, examining how the field grew through dedicated conferences, research labs, and organizations like the Society for Learning Analytics Research (SoLAR). He argued that learning analytics needs to move beyond counting page views and clicks toward understanding the actual learning processes behind those interactions. He also raised early concerns about data privacy and ethical use of student data, issues that remain relevant today.
+
+Verbert et al. \cite{verbert2014learning} surveyed existing learning dashboard implementations and organized them into three categories: dashboards supporting traditional lectures, dashboards for group work, and dashboards aimed at awareness and reflection in online learning. They found that most dashboards focused on helping users become aware of their learning patterns and set goals, but few used visualizations beyond basic charts. The authors called for more innovative and interactive visualizations that go beyond bar graphs and line charts.
+
+Schwendimann et al. \cite{schwendimann2017perceiving} conducted a systematic review of 55 learning dashboard studies. They found that the research field was still young, with most dashboards being proof-of-concept prototypes rather than production systems. Network graphs, tree diagrams, and mind-map-style layouts were almost entirely absent from the dashboards they reviewed. They also highlighted a need for dashboards that are co-designed with their intended users rather than built on assumptions about what information would be useful.
+
+The idea of dual tracking, where the teacher's planned progress through a syllabus is displayed alongside each student's actual understanding, does not appear in any of the dashboards reviewed in these studies. This is one of the features Synapse proposes to introduce.
+
+\section{AI-Powered Education and RAG}
+
+Lewis et al. \cite{lewis2020retrieval} proposed Retrieval-Augmented Generation (RAG) as a method for grounding language model outputs in external documents. Their approach combines a pre-trained sequence-to-sequence model with a dense vector retrieval system: when a question is asked, the system first retrieves relevant passages from a document index, then feeds those passages as context for generating a response. This reduces the model's tendency to generate plausible-sounding but factually incorrect answers. Their experiments on open-domain question answering showed that RAG outperformed models relying only on their parametric knowledge.
+
+In an educational context, RAG allows an AI assistant to be restricted to a specific set of course materials. A student asking about a topic in their chemistry class receives an answer drawn from the teacher's uploaded lecture notes and textbook excerpts, rather than from the model's general training data. Most existing RAG-based tutoring systems are standalone research prototypes that have not been integrated into full-featured LMS platforms. Synapse integrates the RAG assistant directly into the LMS, so the knowledge base is built automatically from the materials each teacher uploads.
+
+Bozkurt et al. \cite{bozkurt2023speculative} also discussed the risks of deploying AI in educational settings without proper guardrails. They noted that generative AI tools can produce authoritative-sounding content that students accept uncritically, making it important to scope AI responses to verified course materials. This concern is part of the motivation behind Synapse's decision to use RAG-based scoping rather than giving students access to a general-purpose chatbot.
+
+\section{Summary of the Literature}
+
+Table \ref{tab:literature_summary} summarizes the areas reviewed and the gaps that the proposed system addresses.
+
+\begin{table}[H]
+\centering
+\caption{Summary of Literature Review Areas and Identified Gaps}
+\label{tab:literature_summary}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|p{3.5cm}|p{5cm}|p{5cm}|}
+\hline
+\thead{Area} & \thead{Current State} & \thead{Gap / Opportunity} \\ \hline
+LMS Platforms & Content delivery and grade tracking & No visual progress mapping \\ \hline
+Mind Mapping & Used as a study tool, not in LMS & Not integrated into progress tracking \\ \hline
+Gamification & Effective in specific apps (Duolingo) & Not applied in general-purpose LMS \\ \hline
+Learning Analytics & Basic charts and dashboards & No dual tracking (teacher vs student) \\ \hline
+AI in Education & RAG reduces hallucinations & Not integrated into LMS with scope control \\ \hline
+\end{tabular}}
+\end{table}

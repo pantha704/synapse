@@ -1,0 +1,15 @@
+\chapter{Introduction}
+
+Learning Management Systems like Google Classroom, Moodle, and Canvas are now standard in schools and universities. They let teachers share materials, assign homework, run tests, and keep grade records. The COVID-19 pandemic accelerated their adoption, but the core design has not changed much since: courses are organized as lists, and progress is shown as a row of scores in a gradebook.
+
+The problem with this approach is that it does not tell anyone very much. A student sees a percentage next to each assignment. A teacher sees a spreadsheet of marks. Neither of them can quickly tell which topics a student skipped, where they got stuck, or how their pace compares to the rest of the class. Learning is treated as a checklist, when it is closer to a web of connected ideas.
+
+Video games figured this out a long time ago. A role-playing game shows progress as a skill tree: a branching diagram where the player can see what they have unlocked, what comes next, and what is still locked. That kind of visual feedback makes progress feel concrete. It also makes gaps obvious. Gamification research has found that students who interact with these kinds of progress systems tend to stay more engaged and finish more of their work \cite{deterding2011game}.
+
+Learning analytics is another area that has grown quickly. The idea is to collect data about how students learn, not just what score they got, but how long they spent on a topic, how often they logged in, and whether they are keeping pace with the class. Visual dashboards can make this data useful, but most dashboards still rely on bar charts and tables \cite{schwendimann2017perceiving}. Almost none use network graphs, tree diagrams, or mindmap-style layouts.
+
+Then there is AI. Large language models can answer student questions, but they also make things up. The technical term is hallucination. Retrieval-Augmented Generation (RAG) is a technique that addresses this by having the model look up relevant information from a document collection before generating a response \cite{lewis2020retrieval}. That way, the AI's answers are grounded in actual source material instead of guesses.
+
+This research brings these pieces together into a single system. Synapse is an LMS that shows the course syllabus as an interactive mindmap and tracks student progress through it in real time. Multiple schools can use the same platform because the system isolates each institution's data at the database level. Teachers get a class progress view that sorts students into progressing, stuck, and inactive. Students get an AI assistant that only answers from the teacher's uploaded materials.
+
+The reasoning is simple: a visual mindmap is easier to read than a spreadsheet. If students can see exactly where they are and what comes next, they will pay more attention. If teachers can see a color-coded map of class progress instead of rows of numbers, they will catch struggling students sooner.
