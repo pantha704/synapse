@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { createEmbedding } from "./embeddings";
+import { createEmbedding, isEmbeddingsConfigured } from "./embeddings";
 
 export interface SearchResult {
   content: string;
@@ -22,6 +22,8 @@ export async function searchSubjectVectors(
   query: string,
   limit: number = TOP_K
 ): Promise<SearchResult[]> {
+  if (!isEmbeddingsConfigured()) return searchSubjectLexical(subjectId, query, limit);
+
   // Generate embedding for the query
   const { embedding } = await createEmbedding(query);
 
@@ -100,4 +102,51 @@ export async function buildRAGContext(
     chunks,
     formattedContext,
   };
+}
+
+/** Postgres full-text search — used when no embedding provider is configured. */
+export async function searchSubjectLexical(
+  subjectId: string,
+  query: string,
+  limit: number = TOP_K
+): Promise<SearchResult[]> {
+  const rows = await prisma.$queryRaw<
+    { content: string; topic_id: string; subject_id: string; score: number; page_num: number | null }[]
+  >`
+    SELECT content, topic_id, subject_id, page_num,
+           ts_rank(to_tsvector('english', content), websearch_to_tsquery('english', ${query})) AS score
+    FROM "document_chunks"
+    WHERE subject_id = ${subjectId}
+      AND to_tsvector('english', content) @@ websearch_to_tsquery('english', ${query})
+    ORDER BY score DESC
+    LIMIT ${limit}
+  `;
+
+  if (rows.length > 0) {
+    return rows.map((r) => ({
+      content: r.content,
+      topicId: r.topic_id,
+      subjectId: r.subject_id,
+      score: Number(r.score),
+      pageNum: r.page_num,
+    }));
+  }
+
+  // Last resort: newest chunks for the subject, so the assistant still has context.
+  const fallback = await prisma.$queryRaw<
+    { content: string; topic_id: string; subject_id: string; page_num: number | null }[]
+  >`
+    SELECT content, topic_id, subject_id, page_num
+    FROM "document_chunks"
+    WHERE subject_id = ${subjectId}
+    ORDER BY created_at DESC
+    LIMIT ${limit}
+  `;
+  return fallback.map((r) => ({
+    content: r.content,
+    topicId: r.topic_id,
+    subjectId: r.subject_id,
+    score: 0,
+    pageNum: r.page_num,
+  }));
 }

@@ -2,13 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { buildRAGContext } from '@/lib/ai/search';
-import Groq from 'groq-sdk';
-
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY || process.env.GROQ_API_KEY || "",
-});
-
-const CHAT_MODEL = "llama-3.3-70b-versatile";
+import { CHAT_MODEL, groq } from '@/lib/ai/embeddings';
 const MAX_TOKENS = 1024;
 const TEMPERATURE = 0.3;
 const MAX_HISTORY = 10;

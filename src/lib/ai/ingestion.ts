@@ -1,5 +1,5 @@
-import * as pdfParse from "pdf-parse";
-import { createEmbeddings } from "./embeddings";
+import { PDFParse } from "pdf-parse";
+import { createEmbeddings, isEmbeddingsConfigured } from "./embeddings";
 import { prisma } from "@/lib/prisma";
 
 export interface Chunk {
@@ -34,16 +34,24 @@ function chunkText(text: string): string[] {
       chunks.push(chunk);
     }
 
-    start = chunkEnd - CHUNK_OVERLAP;
-    if (start <= 0) start = chunkEnd;
+    // stop at the tail, then always move forward — overlap alone can stall
+    // when chunkEnd lands on the end of the document (infinite loop -> OOM)
+    if (chunkEnd >= text.length) break;
+    start = Math.max(chunkEnd - CHUNK_OVERLAP, start + 1);
   }
 
   return chunks;
 }
 
 export async function extractPdfText(buffer: Buffer): Promise<{ text: string; pages: number }> {
-  const result = await (pdfParse as unknown as (buf: Buffer) => Promise<{text: string; numpages: number}>)(buffer);
-  return { text: result.text, pages: result.numpages };
+  // pdf-parse v2 is class-based; the v1 callable default export is gone.
+  const parser = new PDFParse({ data: buffer });
+  try {
+    const result = await parser.getText();
+    return { text: result.text, pages: result.total ?? result.pages?.length ?? 0 };
+  } finally {
+    await parser.destroy?.();
+  }
 }
 
 export async function ingestDocument(
@@ -62,8 +70,16 @@ export async function ingestDocument(
     return { chunksCreated: 0, embeddingsGenerated: 0 };
   }
 
-  // Generate embeddings for all chunks
-  const embeddingResults = await createEmbeddings(chunks);
+  // Embeddings are optional: without a provider the chunks are still stored and
+  // retrieval falls back to full-text search.
+  let embeddingResults: { embedding: number[] }[] = [];
+  if (isEmbeddingsConfigured()) {
+    try {
+      embeddingResults = await createEmbeddings(chunks);
+    } catch (error) {
+      console.warn("embedding generation skipped:", error instanceof Error ? error.message : error);
+    }
+  }
 
   // Store chunks with embeddings in database
   for (let i = 0; i < chunks.length; i++) {

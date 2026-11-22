@@ -1,255 +1,253 @@
 /**
- * Demo Seeder Script
- * Run with: bun run scripts/seed-demo.ts
+ * Demo seed — creates REAL Supabase auth users, so the demo accounts can log in.
+ * Run:  npm run seed        (needs .env.local with service role + DATABASE_URL)
  *
- * Populates the database with realistic demo data for hackathon presentations.
+ * Accounts (password for all: SynapseDemo2026!)
+ *   teacher@demo.synapse.dev        TEACHER
+ *   admin@demo.synapse.dev          ADMIN
+ *   student1..10@demo.synapse.dev   STUDENT
  */
+import { createClient } from "@supabase/supabase-js";
+import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-import { PrismaClient, Role, ProgressStatus, ResourceType, EventType } from "@prisma/client";
+const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
+const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+  auth: { autoRefreshToken: false, persistSession: false },
+});
 
-const prisma = new PrismaClient();
-
-const DEMO_INSTITUTION = {
-  name: "Demo University",
-  slug: "demo-university",
-};
-
-const DEMO_TEACHERS = [
-  { name: "Dr. Aris Thorne", email: "aris.thorne@demo.edu", supabaseId: "demo-teacher-1" },
-  { name: "Prof. Maya Singh", email: "maya.singh@demo.edu", supabaseId: "demo-teacher-2" },
+const PASSWORD = "SynapseDemo2026!";
+const INSTITUTION = "Demo University";
+const BATCH = "B.Tech CSE 2026";
+const JOIN_CODE = "SYN2026";
+const SUBJECT = "Data Structures";
+const TOPICS = [
+  "Arrays and Strings",
+  "Linked Lists",
+  "Stacks and Queues",
+  "Trees and BST",
+  "Graphs",
+  "Hashing",
+  "Sorting Algorithms",
+  "Dynamic Programming",
+];
+const STUDENT_NAMES = [
+  "Aditi Sharma", "Rahul Das", "Neha Bose", "Arjun Iyer", "Priya Ghosh",
+  "Karan Mehta", "Sneha Roy", "Vikram Sen", "Ishita Pal", "Dev Chatterjee",
 ];
 
-const DEMO_BATCHES = [
-  { name: "CS101 - Fall 2024", joinCode: "DEMO01", teacherIdx: 0 },
-  { name: "CS201 - Spring 2025", joinCode: "DEMO02", teacherIdx: 1 },
-];
+async function ensureAuthUser(email: string, name: string, role: string) {
+  const { data, error } = await admin.auth.admin.createUser({
+    email,
+    password: PASSWORD,
+    email_confirm: true,
+    user_metadata: { name, role },
+  });
+  if (!error && data.user) return { id: data.user.id, created: true };
+  if (error && !/already/i.test(error.message)) throw new Error(`${email}: ${error.message}`);
 
-const DEMO_SUBJECTS = [
-  {
-    name: "Introduction to Computer Science",
-    description: "Fundamentals of programming and computational thinking",
-    iconEmoji: "💻",
-    topics: [
-      { title: "Welcome to CS", description: "Course overview and expectations", order: 0 },
-      { title: "Variables & Types", description: "Data types, variables, and operators", order: 1, children: [
-        { title: "Primitive Types", description: "Numbers, strings, booleans", order: 0 },
-        { title: "Type Conversion", description: "Implicit and explicit casting", order: 1 },
-      ]},
-      { title: "Control Flow", description: "Conditionals and loops", order: 2, children: [
-        { title: "If/Else Statements", description: "Conditional branching", order: 0 },
-        { title: "Loops", description: "For, while, and do-while loops", order: 1 },
-      ]},
-      { title: "Functions", description: "Defining and calling functions", order: 3 },
-      { title: "Arrays & Objects", description: "Data structures in JavaScript", order: 4 },
-    ],
-  },
-  {
-    name: "Data Structures",
-    description: "Trees, heaps, and neural maps",
-    iconEmoji: "🌳",
-    topics: [
-      { title: "Introduction", description: "Why data structures matter", order: 0 },
-      { title: "Linked Lists", description: "Singly and doubly linked lists", order: 1 },
-      { title: "Stacks & Queues", description: "LIFO and FIFO structures", order: 2 },
-      { title: "Binary Trees", description: "Tree traversal algorithms", order: 3, children: [
-        { title: "BST Operations", description: "Insert, delete, search", order: 0 },
-        { title: "Balanced Trees", description: "AVL and Red-Black trees", order: 1 },
-      ]},
-      { title: "Hash Maps", description: "Hashing and collision resolution", order: 4 },
-      { title: "Graphs", description: "Graph representation and traversal", order: 5 },
-    ],
-  },
-  {
-    name: "Algorithms",
-    description: "Sorting, searching, and optimization",
-    iconEmoji: "⚡",
-    topics: [
-      { title: "Algorithm Analysis", description: "Big O notation and complexity", order: 0 },
-      { title: "Sorting", description: "Merge sort, quick sort, heap sort", order: 1 },
-      { title: "Searching", description: "Binary search and hash-based lookup", order: 2 },
-      { title: "Dynamic Programming", description: "Memoization and tabulation", order: 3 },
-      { title: "Graph Algorithms", description: "BFS, DFS, Dijkstra's algorithm", order: 4 },
-    ],
-  },
-];
-
-const DEMO_STUDENTS = [
-  { name: "Alex Rivers", email: "alex.rivers@demo.edu", supabaseId: "demo-student-1" },
-  { name: "Sarah Chen", email: "sarah.chen@demo.edu", supabaseId: "demo-student-2" },
-  { name: "Marcus Johnson", email: "marcus.johnson@demo.edu", supabaseId: "demo-student-3" },
-  { name: "Priya Patel", email: "priya.patel@demo.edu", supabaseId: "demo-student-4" },
-  { name: "James Wilson", email: "james.wilson@demo.edu", supabaseId: "demo-student-5" },
-  { name: "Emma Davis", email: "emma.davis@demo.edu", supabaseId: "demo-student-6" },
-  { name: "Liam Brown", email: "liam.brown@demo.edu", supabaseId: "demo-student-7" },
-  { name: "Olivia Martinez", email: "olivia.martinez@demo.edu", supabaseId: "demo-student-8" },
-  { name: "Noah Garcia", email: "noah.garcia@demo.edu", supabaseId: "demo-student-9" },
-  { name: "Ava Thompson", email: "ava.thompson@demo.edu", supabaseId: "demo-student-10" },
-];
-
-// Progress profiles: [progressing, stuck, inactive] mix
-const PROGRESS_PROFILES = [
-  { status: ProgressStatus.COMPLETED, daysAgo: 0 },    // Active now
-  { status: ProgressStatus.COMPLETED, daysAgo: 1 },    // Active yesterday
-  { status: ProgressStatus.IN_PROGRESS, daysAgo: 2 },  // Recent
-  { status: ProgressStatus.IN_PROGRESS, daysAgo: 4 },  // Somewhat recent
-  { status: ProgressStatus.NOT_STARTED, daysAgo: 10 }, // Inactive
-];
-
-async function seed() {
-  console.log("🌱 Seeding demo data...\n");
-
-  // Clean existing demo data
-  console.log("🧹 Cleaning existing demo data...");
-  await prisma.engagementEvent.deleteMany({ where: { student: { institution: { slug: DEMO_INSTITUTION.slug } } } });
-  await prisma.aIMessage.deleteMany({ where: { session: { subject: { institution: { slug: DEMO_INSTITUTION.slug } } } } });
-  await prisma.aISession.deleteMany({ where: { subject: { institution: { slug: DEMO_INSTITUTION.slug } } } });
-  await prisma.studentResourceProgress.deleteMany({ where: { student: { institution: { slug: DEMO_INSTITUTION.slug } } } });
-  await prisma.studentProgress.deleteMany({ where: { student: { institution: { slug: DEMO_INSTITUTION.slug } } } });
-  await prisma.documentChunk.deleteMany({ where: { subject: { institution: { slug: DEMO_INSTITUTION.slug } } } });
-  await prisma.teacherProgress.deleteMany({ where: { batch: { institution: { slug: DEMO_INSTITUTION.slug } } } });
-  await prisma.batchStudent.deleteMany({ where: { batch: { institution: { slug: DEMO_INSTITUTION.slug } } } });
-  await prisma.batchSubject.deleteMany({ where: { batch: { institution: { slug: DEMO_INSTITUTION.slug } } } });
-  await prisma.topicNode.deleteMany({ where: { subject: { institution: { slug: DEMO_INSTITUTION.slug } } } });
-  await prisma.resource.deleteMany({ where: { subject: { institution: { slug: DEMO_INSTITUTION.slug } } } });
-  await prisma.subject.deleteMany({ where: { institution: { slug: DEMO_INSTITUTION.slug } } });
-  await prisma.batch.deleteMany({ where: { institution: { slug: DEMO_INSTITUTION.slug } } });
-  await prisma.user.deleteMany({ where: { institution: { slug: DEMO_INSTITUTION.slug } } });
-  await prisma.institution.deleteMany({ where: { slug: DEMO_INSTITUTION.slug } });
-
-  // Create Institution
-  console.log("🏛️  Creating institution...");
-  const institution = await prisma.institution.create({ data: DEMO_INSTITUTION });
-
-  // Create Teachers
-  console.log("👨‍🏫 Creating teachers...");
-  const teachers = await Promise.all(
-    DEMO_TEACHERS.map((t) =>
-      prisma.user.create({
-        data: { supabaseId: t.supabaseId, email: t.email, name: t.name, role: Role.TEACHER, institutionId: institution.id },
-      })
-    )
-  );
-
-  // Create Batches
-  console.log("📚 Creating batches...");
-  const batches = await Promise.all(
-    DEMO_BATCHES.map((b) =>
-      prisma.batch.create({
-        data: { name: b.name, joinCode: b.joinCode, institutionId: institution.id, teacherId: teachers[b.teacherIdx].id },
-      })
-    )
-  );
-
-  // Create Subjects and Topic Trees
-  console.log("📖 Creating subjects and topic trees...");
-  for (const subjectData of DEMO_SUBJECTS) {
-    const subject = await prisma.subject.create({
-      data: { name: subjectData.name, description: subjectData.description, iconEmoji: subjectData.iconEmoji, institutionId: institution.id },
-    });
-
-    // Link subjects to batches
-    await Promise.all(batches.map((batch) =>
-      prisma.batchSubject.create({ data: { batchId: batch.id, subjectId: subject.id } })
-    ));
-
-    // Create topic tree
-    for (const topicData of subjectData.topics) {
-      const parentTopic = await prisma.topicNode.create({
-        data: {
-          title: topicData.title,
-          description: topicData.description,
-          order: topicData.order,
-          subjectId: subject.id,
-          positionX: Math.random() * 600 + 100,
-          positionY: Math.random() * 400 + 100,
-          nodeType: topicData.children ? "chapter" : "topic",
-        },
-      });
-
-      if (topicData.children) {
-        for (const childData of topicData.children) {
-          await prisma.topicNode.create({
-            data: {
-              title: childData.title,
-              description: childData.description,
-              order: childData.order,
-              subjectId: subject.id,
-              parentId: parentTopic.id,
-              positionX: Math.random() * 600 + 100,
-              positionY: Math.random() * 400 + 100,
-              nodeType: "topic",
-            },
-          });
-        }
-      }
-    }
-  }
-
-  // Create Students and assign to batches
-  console.log("🎓 Creating students...");
-  const allTopics = await prisma.topicNode.findMany();
-  const subjects = await prisma.subject.findMany({ where: { institutionId: institution.id } });
-
-  const students = await Promise.all(
-    DEMO_STUDENTS.map(async (s, idx) => {
-      const student = await prisma.user.create({
-        data: { supabaseId: s.supabaseId, email: s.email, name: s.name, role: Role.STUDENT, institutionId: institution.id },
-      });
-
-      // Assign to random batch
-      const batch = batches[idx % batches.length];
-      await prisma.batchStudent.create({ data: { batchId: batch.id, studentId: student.id } });
-
-      // Create progress for each topic with varied status
-      const profile = PROGRESS_PROFILES[idx % PROGRESS_PROFILES.length];
-      for (const topic of allTopics) {
-        const shouldHaveProgress = Math.random() > 0.3; // 70% of topics have some progress
-        if (shouldHaveProgress) {
-          await prisma.studentProgress.create({
-            data: {
-              studentId: student.id,
-              topicId: topic.id,
-              status: idx < 4 ? ProgressStatus.COMPLETED : idx < 7 ? ProgressStatus.IN_PROGRESS : ProgressStatus.NOT_STARTED,
-              updatedAt: new Date(Date.now() - profile.daysAgo * 86400000),
-            },
-          });
-        }
-      }
-
-      // Create engagement events
-      const eventCount = idx < 4 ? 20 + Math.floor(Math.random() * 15) : idx < 7 ? 5 + Math.floor(Math.random() * 10) : Math.floor(Math.random() * 3);
-      for (let i = 0; i < eventCount; i++) {
-        const daysAgo = Math.floor(Math.random() * 14);
-        const eventTypes: EventType[] = [EventType.LOGIN, EventType.PAGE_VIEW, EventType.RESOURCE_VIEW, EventType.AI_CHAT, EventType.TOPIC_COMPLETE];
-        await prisma.engagementEvent.create({
-          data: {
-            studentId: student.id,
-            type: eventTypes[Math.floor(Math.random() * eventTypes.length)],
-            metadata: JSON.stringify({ page: "/learning-path", duration: Math.floor(Math.random() * 300) }),
-            createdAt: new Date(Date.now() - daysAgo * 86400000 - Math.floor(Math.random() * 86400000)),
-          },
-        });
-      }
-
-      return student;
-    })
-  );
-
-  console.log("\n✅ Demo data seeded successfully!");
-  console.log(`   Institution: ${institution.name}`);
-  console.log(`   Teachers: ${teachers.length}`);
-  console.log(`   Batches: ${batches.length}`);
-  console.log(`   Subjects: ${subjects.length}`);
-  console.log(`   Topics: ${allTopics.length}`);
-  console.log(`   Students: ${students.length}`);
-  console.log("\n🎯 Demo ready for presentation!");
+  const { data: list } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+  const found = list?.users.find((u) => u.email?.toLowerCase() === email.toLowerCase());
+  if (!found) throw new Error(`${email}: exists in auth but not listed`);
+  return { id: found.id, created: false };
 }
 
-seed()
-  .catch((e) => {
-    console.error("❌ Seed failed:", e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
+async function main() {
+  console.log("→ auth users");
+  const people = [
+    { email: "teacher@demo.synapse.dev", name: "Meera Nair", role: "TEACHER" },
+    { email: "admin@demo.synapse.dev", name: "Ravi Menon", role: "ADMIN" },
+    ...STUDENT_NAMES.map((name, i) => ({ email: `student${i + 1}@demo.synapse.dev`, name, role: "STUDENT" })),
+  ];
+
+  const ids: Record<string, string> = {};
+  for (const p of people) {
+    const { id, created } = await ensureAuthUser(p.email, p.name, p.role);
+    ids[p.email] = id;
+    console.log(`  ${created ? "created" : "exists "} ${p.email}`);
+  }
+
+  console.log("→ wipe previous demo tenant");
+  const old = await prisma.institution.findFirst({ where: { name: INSTITUTION } });
+  if (old) {
+    const batchIds = (await prisma.batch.findMany({ where: { institutionId: old.id }, select: { id: true } })).map((b) => b.id);
+    const subjectIds = (await prisma.subject.findMany({ where: { institutionId: old.id }, select: { id: true } })).map((s) => s.id);
+    const userIds = (await prisma.user.findMany({ where: { institutionId: old.id }, select: { id: true } })).map((u) => u.id);
+
+    await prisma.assignmentSubmission.deleteMany({ where: { assignment: { batchId: { in: batchIds } } } });
+    await prisma.assignment.deleteMany({ where: { batchId: { in: batchIds } } });
+    await prisma.announcementRead.deleteMany({ where: { announcement: { batchId: { in: batchIds } } } });
+    await prisma.announcement.deleteMany({ where: { batchId: { in: batchIds } } });
+    await prisma.documentChunk.deleteMany({ where: { subjectId: { in: subjectIds } } });
+    await prisma.engagementEvent.deleteMany({ where: { studentId: { in: userIds } } });
+    await prisma.studentResourceProgress.deleteMany({ where: { studentId: { in: userIds } } });
+    await prisma.studentProgress.deleteMany({ where: { studentId: { in: userIds } } });
+    await prisma.teacherProgress.deleteMany({ where: { batchId: { in: batchIds } } });
+    await prisma.batchStudent.deleteMany({ where: { batchId: { in: batchIds } } });
+    await prisma.batchSubject.deleteMany({ where: { batchId: { in: batchIds } } });
+    await prisma.resource.deleteMany({ where: { subjectId: { in: subjectIds } } });
+    await prisma.topicNode.deleteMany({ where: { subjectId: { in: subjectIds } } });
+    await prisma.subject.deleteMany({ where: { institutionId: old.id } });
+    await prisma.batch.deleteMany({ where: { institutionId: old.id } });
+    await prisma.user.deleteMany({ where: { institutionId: old.id } });
+    await prisma.institution.delete({ where: { id: old.id } });
+    console.log("  removed", old.id);
+  }
+
+  console.log("→ tenant");
+  const institution = await prisma.institution.create({
+    data: { name: INSTITUTION, slug: "demo-university" },
   });
+
+  const teacher = await prisma.user.create({
+    data: {
+      supabaseId: ids["teacher@demo.synapse.dev"],
+      email: "teacher@demo.synapse.dev",
+      name: "Meera Nair",
+      role: "TEACHER",
+      institutionId: institution.id,
+    },
+  });
+  await prisma.user.create({
+    data: {
+      supabaseId: ids["admin@demo.synapse.dev"],
+      email: "admin@demo.synapse.dev",
+      name: "Ravi Menon",
+      role: "ADMIN",
+      institutionId: institution.id,
+    },
+  });
+
+  const students = [];
+  for (let i = 1; i <= STUDENT_NAMES.length; i++) {
+    const email = `student${i}@demo.synapse.dev`;
+    students.push(
+      await prisma.user.create({
+        data: {
+          supabaseId: ids[email],
+          email,
+          name: STUDENT_NAMES[i - 1],
+          role: "STUDENT",
+          institutionId: institution.id,
+        },
+      })
+    );
+  }
+
+  const batch = await prisma.batch.create({
+    data: { name: BATCH, joinCode: JOIN_CODE, institutionId: institution.id, teacherId: teacher.id },
+  });
+  await prisma.batchStudent.createMany({ data: students.map((s) => ({ batchId: batch.id, studentId: s.id })) });
+
+  const subject = await prisma.subject.create({
+    data: {
+      name: SUBJECT,
+      description: "Core data structures, taught with a visual syllabus map.",
+      institutionId: institution.id,
+    },
+  });
+  await prisma.batchSubject.create({ data: { batchId: batch.id, subjectId: subject.id } });
+
+  const topics = [];
+  for (let i = 0; i < TOPICS.length; i++) {
+    topics.push(
+      await prisma.topicNode.create({
+        data: {
+          title: TOPICS[i],
+          description: `Module ${i + 1}`,
+          order: i,
+          subjectId: subject.id,
+          positionX: i * 220,
+          positionY: (i % 2) * 160,
+          nodeType: "topic",
+        },
+      })
+    );
+  }
+
+  // the teacher has opened the first five topics
+  for (const topic of topics.slice(0, 5)) {
+    await prisma.teacherProgress.create({
+      data: { batchId: batch.id, topicId: topic.id, status: "COMPLETED", assignedBy: teacher.id },
+    });
+  }
+
+  const now = Date.now();
+  for (let s = 0; s < students.length; s++) {
+    const reach = 2 + ((s * 3) % 7);
+    for (let t = 0; t < Math.min(reach, topics.length); t++) {
+      await prisma.studentProgress.create({
+        data: { studentId: students[s].id, topicId: topics[t].id, status: t < reach - 1 ? "COMPLETED" : "IN_PROGRESS" },
+      });
+      await prisma.engagementEvent.create({
+        data: {
+          studentId: students[s].id,
+          type: "TOPIC_COMPLETE",
+          metadata: { topic: topics[t].title },
+          createdAt: new Date(now - (t + 1) * 86_400_000 - s * 3_600_000),
+        },
+      });
+    }
+    await prisma.engagementEvent.create({
+      data: {
+        studentId: students[s].id,
+        type: s % 4 === 0 ? "LOGIN" : "RESOURCE_VIEW",
+        createdAt: new Date(now - (s + 1) * 3_600_000),
+      },
+    });
+  }
+
+  const ann1 = await prisma.announcement.create({
+    data: {
+      batchId: batch.id,
+      authorId: teacher.id,
+      title: "Midterm syllabus covered",
+      body: "Arrays through Graphs are done. Revise the traversal examples before Monday.",
+    },
+  });
+  await prisma.announcement.create({
+    data: {
+      batchId: batch.id,
+      authorId: teacher.id,
+      title: "Lab submission",
+      body: "Linked list lab is due Friday. Submit through the Assignments tab.",
+    },
+  });
+  await prisma.announcementRead.create({ data: { announcementId: ann1.id, studentId: students[0].id } });
+
+  const a1 = await prisma.assignment.create({
+    data: {
+      batchId: batch.id,
+      topicId: topics[1].id,
+      title: "Implement a linked list",
+      instructions: "Push, pop, and reverse in TypeScript. Include three tests.",
+      dueAt: new Date(now + 5 * 86_400_000),
+      createdBy: teacher.id,
+    },
+  });
+  await prisma.assignment.create({
+    data: {
+      batchId: batch.id,
+      topicId: topics[3].id,
+      title: "BST traversal worksheet",
+      instructions: "In-order, pre-order, post-order on the given tree.",
+      dueAt: new Date(now + 12 * 86_400_000),
+      createdBy: teacher.id,
+    },
+  });
+  for (const s of students.slice(0, 4)) {
+    await prisma.assignmentSubmission.create({
+      data: { assignmentId: a1.id, studentId: s.id, status: "SUBMITTED", submittedAt: new Date(), note: "Done." },
+    });
+  }
+
+  console.log(`\n✅ ${institution.name} · ${students.length} students · ${topics.length} topics`);
+  console.log(`   log in: teacher@demo.synapse.dev / ${PASSWORD}`);
+  await prisma.$disconnect();
+}
+
+main().catch(async (e) => {
+  console.error(e);
+  await prisma.$disconnect();
+  process.exit(1);
+});
