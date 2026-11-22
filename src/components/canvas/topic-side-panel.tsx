@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Loader2, Upload, File, Video, Link as LinkIcon, Download } from 'lucide-react';
-import { uploadResource as uploadResourceToStorage, BUCKET_NAME } from '@/lib/storage';
+import { uploadAndIngestResource } from '@/app/actions/resource-actions';
 import { toast } from 'sonner';
 import { Resource } from '@prisma/client';
 
@@ -70,16 +70,34 @@ export function TopicSidePanel({
     setIsUploading(true);
 
     try {
-      const { url } = await uploadResourceToStorage(file, topicId, "demo-university");
-      
-      const fileType = file.type.includes('pdf') ? 'PDF' : file.type.includes('video') ? 'VIDEO' : 'LINK';
-      
-      const newResource = await uploadResource(topicId, file.name, fileType, url);
-      setResources(prev => [...prev, newResource]);
-      toast.success("Resource uploaded successfully");
+      const body = new FormData();
+      body.set("topicId", topicId);
+      body.set("file", file);
+
+      const result = await uploadAndIngestResource(body);
+      if (!result.ok) throw new Error(result.error);
+
+      setResources(prev => [
+        ...prev,
+        {
+          id: result.resource.id,
+          title: result.resource.title,
+          type: result.resource.type,
+          url: result.resource.url,
+          content: null,
+          subjectId: "",
+          topicId,
+          createdAt: new Date(),
+        } as Resource,
+      ]);
+      toast.success(
+        result.chunks > 0
+          ? `Uploaded and indexed ${result.chunks} chunks`
+          : "Resource uploaded"
+      );
     } catch (error) {
       console.error(error);
-      toast.error("Failed to upload file");
+      toast.error(error instanceof Error ? error.message : "Failed to upload file");
     } finally {
       setIsUploading(false);
       if (e.target) e.target.value = '';

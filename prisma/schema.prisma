@@ -39,6 +39,7 @@ model User {
   name          String?
   avatarUrl     String?  @map("avatar_url")
   role          Role     @default(STUDENT)
+  isSuperAdmin  Boolean  @default(false) @map("is_super_admin")
   institutionId String   @map("institution_id")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")

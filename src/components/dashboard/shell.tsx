@@ -11,6 +11,7 @@ import {
   BookOpen,
   Users,
   BarChart3,
+  Building2,
   ClipboardList,
   FileText,
   Settings,
@@ -49,6 +50,7 @@ const NAV_ITEMS: Record<string, { label: string; href: string; icon: React.Eleme
   ],
   ADMIN: [
     { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
+    { label: "Institutions", href: "/admin/institutions", icon: Building2 },
   ],
 };
 

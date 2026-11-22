@@ -65,3 +65,30 @@ passed against the live database rather than asserted.
 The April seed wrote placeholder ids (`demo-teacher-1`) into `users.supabase_id`, so those
 rows cannot sign in. A fresh seed must create real Supabase auth users (admin API) and map
 the returned uuids — otherwise a real login lands on empty states.
+
+## Storage
+
+Bucket `resources` created (public read, service-role write). Uploads go through
+`uploadAndIngestResource`, which stores the file under `<institutionId>/<topicId>/`,
+creates the `Resource` row, and indexes PDFs into `document_chunks` in the same call.
+
+## AI provider reality (2026-11-22)
+
+- Groq retired `nvidia/nv-embedqa-e5-v5` on 2026-08-25 — its embeddings endpoint now
+  returns 404. The NIM keys on this account are not provisioned for embeddings (403).
+- The vector path is therefore opt-in via `EMBEDDING_BASE_URL`, `EMBEDDING_MODEL`,
+  `EMBEDDING_API_KEY`. Without them retrieval uses Postgres full-text search
+  (`websearch_to_tsquery`, GIN index from migration `3_fts`).
+- Groq no longer serves `llama-3.3-70b-versatile`; `CHAT_MODEL` defaults to
+  `openai/gpt-oss-120b` and was verified with a live completion.
+
+## Demo accounts (password `SynapseDemo2026!`)
+
+| account | role |
+| --- | --- |
+| teacher@demo.synapse.dev | TEACHER |
+| student1..10@demo.synapse.dev | STUDENT |
+| admin@demo.synapse.dev | ADMIN + platform operator |
+
+`npm run seed` creates them as real Supabase auth users, wipes the previous demo tenant
+and rebuilds batches, topics, progress, engagement, announcements and assignments.
