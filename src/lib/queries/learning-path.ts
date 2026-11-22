@@ -415,3 +415,64 @@ export async function getAdminOverview() {
     avgCompletion: totalRows ? Math.round((completedRows / totalRows) * 100) : 0,
   };
 }
+
+export type ClassReportRow = {
+  studentId: string;
+  name: string;
+  email: string;
+  completed: number;
+  total: number;
+  percent: number;
+  tier: "Progressing" | "Stuck" | "Inactive";
+  lastEvent: string | null;
+};
+
+export async function getClassReport(): Promise<{ batchName: string; rows: ClassReportRow[] }> {
+  const user = await currentDbUser();
+  if (!user) return { batchName: "", rows: [] };
+
+  const batch = await prisma.batch.findFirst({
+    where: { teacherId: user.id },
+    include: {
+      students: { include: { student: true } },
+      subjects: { include: { subject: { include: { topicNodes: { select: { id: true } } } } } },
+    },
+    orderBy: { createdAt: "asc" },
+  });
+  if (!batch) return { batchName: "", rows: [] };
+
+  const topicIds = batch.subjects.flatMap((s) => s.subject.topicNodes.map((t) => t.id));
+  const studentIds = batch.students.map((s) => s.studentId);
+  const [progress, events] = await Promise.all([
+    prisma.studentProgress.findMany({ where: { studentId: { in: studentIds } } }),
+    prisma.engagementEvent.findMany({
+      where: { studentId: { in: studentIds } },
+      orderBy: { createdAt: "desc" },
+    }),
+  ]);
+
+  const now = Date.now();
+  const rows: ClassReportRow[] = batch.students.map(({ student }) => {
+    const mine = progress.filter((p) => p.studentId === student.id);
+    const completed = mine.filter((p) => p.status === "COMPLETED").length;
+    const percent = topicIds.length ? Math.round((completed / topicIds.length) * 100) : 0;
+    const last = events.find((e) => e.studentId === student.id);
+    const daysSince = last ? (now - asDate(last.createdAt).getTime()) / DAY_MS : Infinity;
+    // three tiers, as the report describes them
+    const tier: ClassReportRow["tier"] =
+      daysSince <= 7 && completed > 0 ? "Progressing" : daysSince <= 14 ? "Stuck" : "Inactive";
+    return {
+      studentId: student.id,
+      name: student.name ?? student.email.split("@")[0],
+      email: student.email,
+      completed,
+      total: topicIds.length,
+      percent,
+      tier,
+      lastEvent: last ? asDate(last.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : null,
+    };
+  });
+
+  rows.sort((a, b) => b.percent - a.percent);
+  return { batchName: batch.name, rows };
+}
