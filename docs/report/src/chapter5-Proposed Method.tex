@@ -6,7 +6,7 @@ This chapter describes how Synapse is designed and how its main components fit t
 
 Synapse is a web-based LMS that replaces the usual list of topics with an interactive mindmap. It runs as a single Next.js application backed by Supabase and supports three user roles: Administrators, Teachers, and Students.
 
-A teacher arranges the syllabus as a mindmap on a drag-and-drop canvas and attaches materials (PDFs, links, assignments) to each topic node. Students see the same map and interact with it. Each node carries one of three states:
+A teacher arranges the syllabus as a mindmap on a drag-and-drop canvas and sets assignments against individual topics. Attaching PDFs and links to a topic is supported by the ingestion backend but is not yet exposed as a screen in the interface. Students see the same map and interact with it. Each node carries one of three states:
 
 \begin{itemize}
     \item \textbf{Not started} -- The topic is locked; the student cannot open it yet.
