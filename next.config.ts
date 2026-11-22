@@ -12,6 +12,12 @@ const supabaseHost = (() => {
 // teacher/admin actions, no MIME sniffing, no referrer leak, HTTPS only.
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  experimental: {
+    // The upload action advertises 15 MB and checks it, but a Server Action body
+    // is capped at 1 MB by default, so any normal textbook PDF died as a 413
+    // before reaching the check.
+    serverActions: { bodySizeLimit: "16mb" },
+  },
   async headers() {
     return [
       {

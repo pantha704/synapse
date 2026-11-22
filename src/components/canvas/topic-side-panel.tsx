@@ -90,11 +90,20 @@ export function TopicSidePanel({
           createdAt: new Date(),
         } as Resource,
       ]);
-      toast.success(
-        result.chunks > 0
-          ? `Uploaded and indexed ${result.chunks} chunks`
-          : "Resource uploaded"
-      );
+      if (result.chunks > 0) {
+        toast.success(`Uploaded and indexed ${result.chunks} chunks`);
+      } else if (result.indexed === false && result.indexError) {
+        toast.warning("Uploaded, but it could not be read for the assistant", {
+          description: result.indexError.slice(0, 120),
+        });
+      } else if (result.indexed === false) {
+        // a scanned PDF has no text layer: stored, but the tutor cannot cite it
+        toast.warning("Uploaded, but no text was indexed — the assistant cannot use this file yet", {
+          description: "Scanned pages need OCR before they can be searched.",
+        });
+      } else {
+        toast.success("Resource uploaded");
+      }
     } catch (error) {
       console.error(error);
       toast.error(error instanceof Error ? error.message : "Failed to upload file");
@@ -135,7 +144,8 @@ export function TopicSidePanel({
                   Browse Files
                 </Button>
                 <input 
-                  type="file" 
+                  type="file"
+                  accept=".pdf" 
                   className="absolute inset-0 opacity-0 cursor-pointer"
                   onChange={handleFileUpload}
                   disabled={isUploading}

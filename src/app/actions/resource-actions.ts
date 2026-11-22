@@ -2,12 +2,21 @@
 
 import { createClient as createSupabaseAdmin } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
+import { createHash } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/utils/supabase/server";
 import { ingestDocument } from "@/lib/ai/ingestion";
 
 export type UploadResult =
-  | { ok: true; resource: { id: string; title: string; type: string; url: string | null }; chunks: number; embeddings: number }
+  | {
+      ok: true;
+      resource: { id: string; title: string; type: string; url: string | null };
+      chunks: number;
+      embeddings: number;
+      /** false when the file was stored but no text could be indexed */
+      indexed: boolean;
+      indexError: string | null;
+    }
   | { ok: false; error: string };
 
 const BUCKET = "resources";
@@ -49,12 +58,15 @@ export async function uploadAndIngestResource(formData: FormData): Promise<Uploa
   });
 
   const safeName = file.name.replace(/[^\w.\-]+/g, "_").slice(-80);
-  const path = `${dbUser.institutionId}/${topic.id}/${Date.now()}-${safeName}`;
   const buffer = Buffer.from(await file.arrayBuffer());
+  // content-addressed path: re-uploading the same document overwrites it instead
+  // of creating a second copy that ingestion then has to reconcile
+  const digest = createHash("sha256").update(buffer).digest("hex").slice(0, 16);
+  const path = `${dbUser.institutionId}/${topic.id}/${digest}-${safeName}`;
 
   const { error: uploadError } = await admin.storage.from(BUCKET).upload(path, buffer, {
     contentType: file.type || "application/octet-stream",
-    upsert: false,
+    upsert: true,
   });
   if (uploadError) return { ok: false, error: `Storage: ${uploadError.message}` };
 
@@ -73,12 +85,15 @@ export async function uploadAndIngestResource(formData: FormData): Promise<Uploa
   // Index PDFs so the assistant can cite them; other types stay download-only.
   let chunks = 0;
   let embeddings = 0;
+  let indexError: string | null = null;
   if (file.type.includes("pdf")) {
     try {
       const result = await ingestDocument(topic.id, topic.subjectId, buffer, pub.publicUrl);
       chunks = result.chunksCreated;
       embeddings = result.embeddingsGenerated;
     } catch (error) {
+      // a scanned PDF or a parser failure used to look exactly like success
+      indexError = error instanceof Error ? error.message : "indexing failed";
       console.error("ingestion failed", error);
     }
   }
@@ -86,5 +101,12 @@ export async function uploadAndIngestResource(formData: FormData): Promise<Uploa
   revalidatePath(`/teacher/subjects/${topic.subjectId}`);
   revalidatePath("/student/learning-path");
 
-  return { ok: true, resource: { id: resource.id, title: resource.title, type: resource.type, url: resource.url }, chunks, embeddings };
+  return {
+    ok: true,
+    resource: { id: resource.id, title: resource.title, type: resource.type, url: resource.url },
+    chunks,
+    embeddings,
+    indexed: chunks > 0,
+    indexError,
+  };
 }

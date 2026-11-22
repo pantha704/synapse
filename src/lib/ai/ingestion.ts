@@ -37,11 +37,22 @@ function isUseful(chunk: string): boolean {
   if (visible === 0) return false;
   // table-of-contents dot leaders survived as chunks of pure punctuation
   const alnum = chunk.replace(/[^a-z0-9]/gi, "").length;
-  return alnum / visible > 0.5;
+  // "Chapter 1 ......... 5" survives an alnum-ratio test and then ranks for
+  // real queries; a chunk needs prose, not a dotted index
+  const dotLeaders = (chunk.match(/\.\s*\./g) ?? []).length;
+  return alnum / visible > 0.5 && dotLeaders < 5;
 }
 
 export function chunkText(text: string): string[] {
-  const clean = text.replace(/\r\n/g, "\n").replace(/[ \t]+/g, " ").trim();
+  const clean = text
+    .replace(/\r\n/g, "\n")
+    // pdf-parse emits its own page separator, and the running footer of every
+    // page then becomes retrievable "course material"
+    .replace(/^-{1,3}\s*\d+\s+of\s+\d+\s*-{1,3}$/gm, "")
+    .replace(/^.*\bPage\s+\d+\b.*$/gm, "")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
   if (!clean) return [];
 
   const chunks: string[] = [];
@@ -101,15 +112,29 @@ export function chunkText(text: string): string[] {
   return chunks;
 }
 
-export async function extractPdfText(buffer: Buffer): Promise<{ text: string; pages: number }> {
+/**
+ * Per-page extraction. The old version returned one concatenated string and a
+ * page count, which meant every stored chunk had page_num NULL and no citation
+ * could ever point at a page.
+ */
+export async function extractPdfPages(
+  buffer: Buffer
+): Promise<{ num: number; text: string }[]> {
   // pdf-parse v2 is class-based; the v1 callable default export is gone.
   const parser = new PDFParse({ data: buffer });
   try {
     const result = await parser.getText();
-    return { text: result.text, pages: result.total ?? result.pages?.length ?? 0 };
+    const pages = (result as { pages?: { num: number; text: string }[] }).pages ?? [];
+    if (pages.length > 0) return pages.map((p) => ({ num: p.num, text: p.text ?? "" }));
+    return [{ num: 1, text: result.text ?? "" }];
   } finally {
     await parser.destroy?.();
   }
+}
+
+export async function extractPdfText(buffer: Buffer): Promise<{ text: string; pages: number }> {
+  const pages = await extractPdfPages(buffer);
+  return { text: pages.map((p) => p.text).join("\n"), pages: pages.length };
 }
 
 export async function ingestDocument(
@@ -117,52 +142,71 @@ export async function ingestDocument(
   subjectId: string,
   pdfBuffer: Buffer,
   sourceUrl?: string
-): Promise<{ chunksCreated: number; embeddingsGenerated: number }> {
-  // Extract text from PDF
-  const { text } = await extractPdfText(pdfBuffer);
+): Promise<{ chunksCreated: number; embeddingsGenerated: number; pages: number }> {
+  const pages = await extractPdfPages(pdfBuffer);
 
-  // Chunk the text
-  const chunks = chunkText(text);
+  // Chunk per page so every chunk knows which page it came from.
+  const chunks: { content: string; pageNum: number }[] = [];
+  for (const page of pages) {
+    for (const content of chunkText(page.text)) chunks.push({ content, pageNum: page.num });
+  }
 
   if (chunks.length === 0) {
-    return { chunksCreated: 0, embeddingsGenerated: 0 };
+    return { chunksCreated: 0, embeddingsGenerated: 0, pages: pages.length };
+  }
+
+  // Re-ingesting the same document used to append a second full copy of every
+  // chunk; the corpus for one topic is replaced, not duplicated.
+  if (sourceUrl) {
+    await prisma.$executeRaw`
+      DELETE FROM "document_chunks" WHERE topic_id = ${topicId} AND source_url = ${sourceUrl}
+    `;
+  }
+
+  // Insert first, embed second. The old order awaited every embedding batch
+  // before writing a single row, so a slow or hanging provider meant an upload
+  // that stored nothing at all.
+  const ids: string[] = [];
+  for (let i = 0; i < chunks.length; i++) {
+    const rows = await prisma.$queryRaw<{ id: string }[]>`
+      INSERT INTO "document_chunks" (id, topic_id, subject_id, content, embedding, chunk_idx, page_num, source_url, created_at)
+      VALUES (
+        gen_random_uuid()::text,
+        ${topicId},
+        ${subjectId},
+        ${chunks[i].content},
+        NULL,
+        ${i},
+        ${chunks[i].pageNum},
+        ${sourceUrl || null},
+        NOW()
+      )
+      RETURNING id
+    `;
+    ids.push(rows[0].id);
   }
 
   // Embeddings are optional: without a provider the chunks are still stored and
   // retrieval falls back to full-text search.
-  let embeddingResults: { embedding: number[] }[] = [];
+  let embedded = 0;
   if (isEmbeddingsConfigured()) {
     try {
-      embeddingResults = await createEmbeddings(chunks);
+      const results = await createEmbeddings(chunks.map((c) => c.content));
+      for (let i = 0; i < results.length && i < ids.length; i++) {
+        const embedding = results[i]?.embedding;
+        if (!embedding) continue;
+        await prisma.$executeRaw`
+          UPDATE "document_chunks" SET embedding = ${`[${embedding.join(",")}]`}::vector(1024)
+          WHERE id = ${ids[i]}
+        `;
+        embedded++;
+      }
     } catch (error) {
       console.warn("embedding generation skipped:", error instanceof Error ? error.message : error);
     }
   }
 
-  // Store chunks with embeddings in database
-  for (let i = 0; i < chunks.length; i++) {
-    const embedding = embeddingResults[i]?.embedding;
-
-    // Use raw SQL for vector insertion since Prisma doesn't support vector type natively
-    await prisma.$executeRaw`
-      INSERT INTO "document_chunks" (id, topic_id, subject_id, content, embedding, chunk_idx, source_url, created_at)
-      VALUES (
-        gen_random_uuid()::text,
-        ${topicId},
-        ${subjectId},
-        ${chunks[i]},
-        ${embedding ? `[${embedding.join(",")}]` : null}::vector(1024),
-        ${i},
-        ${sourceUrl || null},
-        NOW()
-      )
-    `;
-  }
-
-  return {
-    chunksCreated: chunks.length,
-    embeddingsGenerated: embeddingResults.length,
-  };
+  return { chunksCreated: chunks.length, embeddingsGenerated: embedded, pages: pages.length };
 }
 
 export async function deleteTopicChunks(topicId: string): Promise<void> {

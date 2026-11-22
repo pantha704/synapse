@@ -26,6 +26,8 @@ export async function createEmbedding(text: string): Promise<EmbeddingResult> {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ model: EMBEDDING_MODEL, input: text, encoding_format: "float" }),
+    // a provider that never answers used to hold the whole ingestion request open
+    signal: AbortSignal.timeout(15_000),
   });
 
   if (!response.ok) {
@@ -38,8 +40,15 @@ export async function createEmbedding(text: string): Promise<EmbeddingResult> {
     usage?: { prompt_tokens: number };
   };
 
+  // the column is vector(1024); a provider returning another width fails later
+  // with a raw Postgres error after the upload already looked successful
+  const embedding = data.data[0]?.embedding ?? [];
+  if (embedding.length !== 1024) {
+    throw new Error(`EMBEDDING_DIM_MISMATCH: expected 1024, got ${embedding.length}`);
+  }
+
   return {
-    embedding: data.data[0].embedding,
+    embedding,
     model: data.model,
     usage: { prompt_tokens: data.usage?.prompt_tokens ?? 0 },
   };

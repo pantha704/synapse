@@ -50,4 +50,18 @@ describe("chunkText", () => {
     const toc = ". ".repeat(400);
     expect(chunkText(toc)).toEqual([]);
   });
+
+  it("strips pdf page separators and running footers", () => {
+    const page =
+      "-- 3 of 28 --\nThe retriever scores every chunk and keeps the best five.\n" +
+      "Sister Nivedita University, WB Page 3\n";
+    const chunks = chunkText(page.repeat(6));
+    expect(chunks.length).toBeGreaterThan(0);
+    expect(chunks.some((c) => /of 28|Page 3/.test(c))).toBe(false);
+  });
+
+  it("rejects a dotted table of contents", () => {
+    const toc = Array.from({ length: 12 }, (_, i) => `Chapter ${i + 1} ....... ${i + 3}`).join("\n");
+    expect(chunkText(toc).every((c) => (c.match(/\.\s*\./g) ?? []).length < 5)).toBe(true);
+  });
 });
