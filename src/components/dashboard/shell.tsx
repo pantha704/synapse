@@ -36,6 +36,7 @@ const NAV_ITEMS: Record<string, { label: string; href: string; icon: React.Eleme
   TEACHER: [
     { label: "Dashboard", href: "/teacher", icon: LayoutDashboard },
     { label: "Learning Path", href: "/teacher/learning-path", icon: BookOpen },
+    { label: "Students", href: "/teacher/students", icon: Users },
     { label: "Analytics", href: "/teacher/analytics", icon: BarChart3 },
   ],
   STUDENT: [

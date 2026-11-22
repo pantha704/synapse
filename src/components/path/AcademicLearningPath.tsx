@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, BookOpen, Lock } from "lucide-react";
+import { CheckCircle2, BookOpen, Clock, Lock } from "lucide-react";
 import { motion } from "framer-motion";
 import type { LearningNode } from "@/lib/path-types";
 
@@ -32,6 +32,14 @@ export function AcademicPathNode({ node, index }: AcademicPathNodeProps) {
       iconColor: "text-indigo-600",
       titleColor: "text-indigo-900",
       Icon: BookOpen,
+    },
+    upcoming: {
+      bgColor: "bg-amber-50",
+      borderColor: "border-amber-200",
+      iconBg: "bg-amber-100",
+      iconColor: "text-amber-600",
+      titleColor: "text-amber-900",
+      Icon: Clock,
     },
     locked: {
       bgColor: "bg-gray-100",

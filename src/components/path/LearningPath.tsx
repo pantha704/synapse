@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Lock, BrainCircuit } from "lucide-react";
+import { CheckCircle2, Lock, BrainCircuit, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 import type { LearningNode } from "@/lib/path-types";
 
@@ -34,6 +34,15 @@ export function LearningPathNode({ node, index }: LearningPathNodeProps) {
       badgeText: "text-violet-300",
       badgeBorder: "border-violet-500/30",
       Icon: BrainCircuit,
+    },
+    upcoming: {
+      borderColor: "border-amber-500/40",
+      glowColor: "",
+      iconColor: "text-amber-400",
+      badgeBg: "bg-amber-500/10",
+      badgeText: "text-amber-300",
+      badgeBorder: "border-amber-500/20",
+      Icon: Clock,
     },
     locked: {
       borderColor: "border-white/10",

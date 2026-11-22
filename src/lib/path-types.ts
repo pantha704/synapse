@@ -1,4 +1,4 @@
-export type LearningStatus = "completed" | "in-progress" | "locked";
+export type LearningStatus = "completed" | "in-progress" | "upcoming" | "locked";
 
 export interface LearningNode {
   id: string;
@@ -6,7 +6,7 @@ export interface LearningNode {
   description: string;
   status: LearningStatus;
   progress?: number;
-  icon: "check" | "book" | "lock";
+  icon: "check" | "book" | "clock" | "lock";
   position: "center" | "left" | "right";
 }
 
@@ -46,4 +46,12 @@ export interface StudentStats {
   weeklyPerformance: number[];
   weeklyLabels: string[];
   recentActivity: StudentActivity[];
+}
+
+export interface AnnouncementItem {
+  id: string;
+  title: string;
+  body: string;
+  createdAt: string;
+  read: boolean;
 }

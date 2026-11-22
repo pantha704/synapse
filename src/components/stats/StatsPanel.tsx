@@ -123,12 +123,14 @@ function EngagementNebula() {
 interface StatsPanelProps {
   batchPulse: BatchPulseProps;
   criticalNodes: CriticalNode[];
+  children?: React.ReactNode;
 }
 
-export function StatsPanel({ batchPulse: pulse, criticalNodes: nodes }: StatsPanelProps) {
+export function StatsPanel({ batchPulse: pulse, criticalNodes: nodes, children }: StatsPanelProps) {
   return (
     <aside className="w-80 bg-white/[0.04] border-l border-white/[0.06] p-6 overflow-y-auto">
       <div className="space-y-8">
+        {children}
         <BatchPulse {...pulse} />
         <CriticalNodes nodes={nodes} />
         <EngagementNebula />

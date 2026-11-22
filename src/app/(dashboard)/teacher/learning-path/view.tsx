@@ -2,15 +2,18 @@
 
 import { LearningPath } from "@/components/path/LearningPath";
 import { StatsPanel } from "@/components/stats/StatsPanel";
-import type { BatchPulse, CriticalNode, LearningNode } from "@/lib/path-types";
+import { AnnouncementsPanel } from "@/components/announcements/announcements-panel";
+import type { AnnouncementItem, BatchPulse, CriticalNode, LearningNode } from "@/lib/path-types";
 
 interface Props {
   nodes: LearningNode[];
   batchPulse: BatchPulse;
   criticalNodes: CriticalNode[];
+  announcements: AnnouncementItem[];
+  batchId: string | null;
 }
 
-export function TeacherPathView({ nodes, batchPulse, criticalNodes }: Props) {
+export function TeacherPathView({ nodes, batchPulse, criticalNodes, announcements, batchId }: Props) {
   return (
     <div className="min-h-screen bg-[#0e0e0e]">
 
@@ -27,7 +30,9 @@ export function TeacherPathView({ nodes, batchPulse, criticalNodes }: Props) {
             </div>
           </div>
         )}
-        <StatsPanel batchPulse={batchPulse} criticalNodes={criticalNodes} />
+        <StatsPanel batchPulse={batchPulse} criticalNodes={criticalNodes}>
+          <AnnouncementsPanel items={announcements} canPost batchId={batchId} dark />
+        </StatsPanel>
       </main>
     </div>
   );

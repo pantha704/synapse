@@ -53,6 +53,7 @@ model User {
   studentProgress           StudentProgress[]
   engagementEvents          EngagementEvent[]
   studentResourceProgresses StudentResourceProgress[]
+  announcementReads         AnnouncementRead[]
   aiSessions                AISession[]
 
   @@index([institutionId])
@@ -76,6 +77,7 @@ model Batch {
   students    BatchStudent[]
   subjects    BatchSubject[]
   teacherProgress TeacherProgress[]
+  announcements Announcement[]
 
   @@index([institutionId])
   @@index([joinCode])
@@ -221,6 +223,38 @@ model TeacherProgress {
   @@index([batchId])
   @@index([topicId])
   @@map("teacher_progress")
+}
+
+// ─── Announcements ─────────────────────────────────────────────
+
+model Announcement {
+  id        String   @id @default(cuid())
+  batchId   String   @map("batch_id")
+  authorId  String   @map("author_id")
+  title     String
+  body      String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+
+  batch Batch              @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  reads AnnouncementRead[]
+
+  @@index([batchId])
+  @@index([createdAt])
+  @@map("announcements")
+}
+
+model AnnouncementRead {
+  id             String   @id @default(cuid())
+  announcementId String   @map("announcement_id")
+  studentId      String   @map("student_id")
+  readAt         DateTime @default(now()) @map("read_at")
+
+  announcement Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  student      User         @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([announcementId, studentId])
+  @@index([studentId])
+  @@map("announcement_reads")
 }
 
 model DocumentChunk {
