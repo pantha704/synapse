@@ -92,3 +92,26 @@ creates the `Resource` row, and indexes PDFs into `document_chunks` in the same 
 
 `npm run seed` creates them as real Supabase auth users, wipes the previous demo tenant
 and rebuilds batches, topics, progress, engagement, announcements and assignments.
+
+## Deployment (Render, free plan)
+
+Live: https://synapse-10ue.onrender.com · service `srv-dc1hhg3l550s73ehb190` · singapore.
+
+Set as environment variables on the service: the Supabase URL and both keys,
+`DATABASE_URL`, `GROQ_API_KEY`, `CHAT_MODEL=openai/gpt-oss-120b`, `NODE_VERSION=22`.
+
+**The connection string is not the direct one.** Supabase's direct host
+(`db.<ref>.supabase.co`) resolves to IPv6 only, and Render's free tier has no IPv6
+egress — the app failed with `ENETUNREACH 2406:da12:...:5432`. Use the Supavisor pooler,
+which is dual-stack:
+
+```
+postgresql://synapse_app.<project-ref>:<password>@aws-1-ap-northeast-2.pooler.supabase.com:5432/postgres
+```
+
+Port 5432 is session mode, which behaves like a normal connection for Prisma. (Port 6543
+is transaction mode; `aws-0` for this region does not host the tenant, `aws-1` does.)
+
+`/api/health` returns `{"ok":true,"db":"up"}` and is excluded from the auth middleware so
+the host can poll it. It answers 503 with the driver message when the database is
+unreachable — which is how the IPv6 problem was found in the first place.
