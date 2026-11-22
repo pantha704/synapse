@@ -6,13 +6,12 @@ This chapter describes how Synapse is designed and how its main components fit t
 
 Synapse is a web-based LMS that replaces the usual list of topics with an interactive mindmap. It runs as a single Next.js application backed by Supabase and supports three user roles: Administrators, Teachers, and Students.
 
-A teacher creates a course, builds the syllabus as a mindmap on a drag-and-drop canvas, and attaches materials (PDFs, links, assignments) to each topic node. Students see the same map and interact with it. Each node has one of four states:
+A teacher arranges the syllabus as a mindmap on a drag-and-drop canvas and attaches materials (PDFs, links, assignments) to each topic node. Students see the same map and interact with it. Each node carries one of three states:
 
 \begin{itemize}
-    \item \textbf{Not started} -- The teacher has not opened this topic for the class yet.
-    \item \textbf{Upcoming} -- The teacher has opened it, but this student has not begun.
-    \item \textbf{In progress} -- The student has started working on this topic.
-    \item \textbf{Completed} -- The student has marked it finished.
+    \item \textbf{Not started} -- The topic is locked; the student cannot open it yet.
+    \item \textbf{In progress} -- The student has opened it and is working through its resources.
+    \item \textbf{Completed} -- Every resource on the topic has been marked done.
 \end{itemize}
 
 \section{System Architecture}
@@ -20,9 +19,9 @@ A teacher creates a course, builds the syllabus as a mindmap on a drag-and-drop 
 The system has three layers:
 
 \begin{enumerate}
-    \item \textbf{Frontend Layer:} Next.js 16 with App Router, Tailwind CSS v4, Framer Motion, Base UI components. The mindmap canvas uses React Flow. State management is handled by Zustand.
+    \item \textbf{Frontend Layer:} Next.js 16 with App Router, Tailwind CSS v4, Framer Motion, Base UI components. The mindmap canvas uses React Flow. Client state is held in React component state.
     \item \textbf{Backend Layer:} Next.js Server Actions and API Routes handle authentication and business logic.
-    \item \textbf{Data Layer:} PostgreSQL with a Row-Level Security policy on every table for multi-tenant isolation. Supabase Auth for authentication. pgvector for document embeddings, with PostgreSQL full-text search as the retrieval fallback. Supabase Storage for file uploads.
+    \item \textbf{Data Layer:} PostgreSQL with Row-Level Security enabled on every table, plus tenant-scoped policies for the browser path; the application's own database role is dedicated and non-owner, and every query it runs filters by institution in code. Supabase Auth for authentication. pgvector for document embeddings, with PostgreSQL full-text search as the retrieval fallback. Supabase Storage for file uploads.
 \end{enumerate}
 
 Figure \ref{fig:system_arch} shows the high-level system architecture.
@@ -41,7 +40,7 @@ Figure \ref{fig:system_arch} shows the high-level system architecture.
 
     % FRONTEND LAYER
     \node [block] (ui) at (0, 0) {Synapse UI};
-    \node [block] (state) at (-5.5, -2.5) {Zustand Store};
+    \node [block] (state) at (-5.5, -2.5) {Client State};
     \node [block] (api) at (0, -2.5) {Next.js API \& Server Actions};
     \node [block] (canvas) at (5.5, -2.5) {React Flow Mindmap};
 
@@ -97,19 +96,19 @@ Figure \ref{fig:system_arch} shows the high-level system architecture.
 \section{Key Workflows}
 
 \subsection{Multi-Tenant Onboarding}
-Each institution is a separate tenant. A Super Admin creates the institution, then an Admin adds teachers and students through CSV uploads or join codes. Row-Level Security at the database level keeps each institution's data separate from the others.
+Each institution is a separate tenant. A platform operator creates the institution, then a teacher adds students by CSV invite or by a batch join code. Row-Level Security, together with the tenant predicate every application query carries, keeps each institution's data separate from the others.
 
 \subsection{Curriculum Creation (Teacher Flow)}
 Teachers create batches and define subjects. They build the curriculum as a visual mindmap on the React Flow canvas, attaching PDFs, links, and assignments to individual topic nodes.
 
 \subsection{Learning and Progress Tracking (Student Flow)}
-Students see the mindmap for each of their subjects. Topics start unopened. As the teacher opens them for the class, they appear as upcoming for every student; each student's own node then moves to in progress and finally completed. The system records each transition.
+Students see the mindmap for each of their subjects. Topics start locked; a node moves to in progress when the student opens its resources and to completed once every resource on it has been marked done. The learning-path view derives an additional upcoming state for cards the teacher has released but the student has not started.
 
 \subsection{Dual Progress Tracking}
-Two progress timelines run in parallel: the teacher's delivery schedule and each student's actual progress. Each student is then placed in one of three engagement bands --- \textcolor{green}{\textbf{Progressing}}, \textcolor{yellow}{\textbf{Stuck}}, and \textcolor{red}{\textbf{Inactive}} --- computed from the recency and type of their activity events. The system infers these states from passive signals like login frequency and time spent on resources.
+Two progress timelines run in parallel: the teacher's delivery schedule and each student's actual progress. Each student is then placed in one of three engagement bands --- \textcolor{green}{\textbf{Progressing}}, \textcolor{yellow}{\textbf{Stuck}}, and \textcolor{red}{\textbf{Inactive}} --- computed from the recency of recorded activity events and whether the student has completed any topic. The events the running system writes are topic completions, with login and resource-view events supplied by the seed data.
 
 \subsection{AI Study Assistant (RAG Pipeline)}
-When a student asks a question, four things happen: (1) the question is converted to a vector embedding, (2) pgvector is searched for relevant chunks, filtered by the subject ID so only that course's materials are used, (3) the retrieved context and the original question go to Groq for inference, and (4) the response is streamed back to the student. The AI never sees materials outside the teacher's approved set.
+When a student asks a question, four things happen: (1) if an embedding provider is configured, the question is converted to a vector and pgvector is searched; otherwise PostgreSQL full-text search ranks the chunks, (2) the search is filtered by the subject ID so only that course's materials are used, (3) the retrieved context and the original question go to Groq for inference inside a randomly generated delimiter that marks the text as untrusted, and (4) the response is returned to the student in a single reply. The AI never sees materials outside the teacher's approved set.
 
 
 \section{Technologies Used}
@@ -126,7 +125,7 @@ Database & PostgreSQL with Prisma ORM \\ \hline
 Authentication & Supabase Auth (SSR) \\ \hline
 UI Styling & Tailwind CSS v4, Shadcn UI \\ \hline
 Animations & Framer Motion \\ \hline
-State Management & Zustand \\ \hline
+State Management & React (hooks and node state) \\ \hline
 Mindmap Canvas & React Flow \\ \hline
 Vector Database & pgvector (Supabase) \\ \hline
 AI Inference & Groq (open-weight chat models) \\ \hline

@@ -56,3 +56,25 @@ Rerank nodes. No number in prose moved.
   package is not in a tectonic bundle.
 - `main page.tex` renamed `main.tex`; biber cannot resolve a `main page.bcf` containing a space.
 - Body font cannot render U+2014 — em dashes are written `---`.
+
+## Correction pass — 22 Nov 2026
+
+The report described the system as it was designed, in six places where the code had since
+diverged. Each was rewritten to what the deployment actually does; the compiled PDF is
+`Synapse_Proposal_corrected.pdf` (28 pages, same as before).
+
+| Claim in the document | What the code does | Fixed in |
+| --- | --- | --- |
+| "A teacher creates a course, builds the syllabus" | The topic tree is seeded; the teacher arranges it on the canvas | ch5 §Proposed Method |
+| Four node states with *Upcoming* | Three states on the map; *upcoming* is derived on the path cards | ch5, ch6 |
+| "an Admin adds teachers and students through CSV uploads" | A teacher invites students by CSV or join code | ch5 |
+| Progress "inferred from login frequency and time spent" | Bands are computed from recorded events; the app writes topic completions | ch5 |
+| "the response is streamed back" | `stream: false` — one reply | ch5 |
+| "State management is handled by Zustand" | Client state is React state; nothing imports Zustand | ch5 (prose, table, figure) |
+
+Also corrected: the RLS sentence now says policies cover the browser path and the
+application role scopes tenants in code (the previous wording implied the ORM connection
+was policy-bound).
+
+Integrity: `tex-integrity-check.py` reports identical citations, labels, refs, numbers and
+quoted spans for both edited chapters.

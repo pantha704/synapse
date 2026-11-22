@@ -19,7 +19,7 @@ Current tools track either the teacher's schedule or the student's grades, but n
 
 Gamification has been shown to increase student engagement, but it mostly appears in specialized apps like Duolingo and Khan Academy. These platforms target specific subjects and are not general purpose LMS tools. Wider LMS platforms have not adopted visual progression mechanics.
 
-\textbf{How Synapse addresses this:} The mindmap naturally works like a skill tree. Students watch nodes move from not started, through upcoming and in progress, to completed as they work through the material. The system also tracks XP points and awards engagement badges.
+\textbf{How Synapse addresses this:} The mindmap naturally works like a skill tree. Students watch nodes move from not started to in progress and then completed as they work through the material, with an upcoming state derived on the learning-path view for released topics they have not opened. The system also tracks XP points and awards engagement badges.
 
 \section{Gap 4: AI Assistants Without Curriculum Scope Control}
 
@@ -31,7 +31,7 @@ AI chatbots used in education typically run on general purpose language models t
 
 Many LMS tools are designed for a single institution. Running them for multiple schools means separate installations or complicated workarounds. This makes it hard for a platform provider to serve several institutions from one deployment without data leaking between them.
 
-\textbf{How Synapse addresses this:} PostgreSQL Row-Level Security enforces data isolation at the database level. Every table carries a policy keyed to the caller's institution, so a query issued by one institution returns nothing belonging to another; the single sanctioned exception is a \texttt{SECURITY DEFINER} function that lets a student join a batch with a shared code.
+\textbf{How Synapse addresses this:} PostgreSQL Row-Level Security is enabled on every table, with tenant-scoped policies for the browser path, and the browser role holds read access only --- no direct writes. The application reaches the database through its own dedicated non-owner role, so isolation of application queries is enforced in code by an institution predicate on every read and write. The single sanctioned cross-tenant read is a \texttt{SECURITY DEFINER} function that lets a student join a batch with a shared code.
 
 \section{Summary of Research Gaps}
 
