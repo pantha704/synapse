@@ -19,19 +19,19 @@ In response, Two records are maintained separately and compared when read. The f
 
 Gamification has empirical support, but the systems that apply it effectively are specialised applications addressing a single subject and a single audience. General-purpose platforms have adopted badges and leaderboards instead of progression structures. A badge constitutes a reward; a skill tree is a representation of the course, and it is the representation that informs the student's decisions.
 
-In response, The mindmap already has the form of a skill tree, so the progression mechanic requires no additional structure. Nodes move from not started to in progress and to completed as work is performed, and the learning-path view derives experience points, a level for each hundred points, and badges at the first, fifth, tenth and twenty-fifth completed topic.
+In response, The mindmap already has the form of a skill tree, so the progression mechanic requires no additional structure. Nodes move from not started to in progress and to completed as work is performed. Experience points are derived rather than stored, at ten points for each completed topic, with a level for every hundred points and badges at the first, fifth, tenth and twenty-fifth completion.
 
 \section{Absence of Curriculum Scope Control}
 
 A general-purpose assistant answers from the corpus on which it was trained, which is not the corpus of a course. Such a system may be correct about the subject and incorrect about the syllabus within the same response, and the student has no means of distinguishing the two.
 
-In response, Retrieval is restricted to one subject at query time. Passages are filtered by subject identifier, so the model can only be supplied with documents associated with that course, and a question whose terms match no indexed material receives an explicit statement that the material does not address it. The retrieval and generation path is implemented and tested; mounting the interface is the remaining step.
+In response, Retrieval is restricted to one subject at query time. Passages are filtered by subject identifier, so the model can only be supplied with documents associated with that course, and a question whose terms match no indexed material receives an explicit statement that the material does not address it. On the deployed instance the index holds 85 passages drawn from the project's own 28-page report, each tagged with the page it came from, and a question that matches none of them returns no context rather than a sample of nearby rows. The retrieval and generation path is implemented and tested; mounting the interface is the remaining step.
 
 \section{Limited Multi-Tenant Support}
 
 Most platforms assume a single institution. Serving several institutions from one installation requires either separate deployments or a shared database with a tenant column that is not enforced. The second arrangement is the more hazardous, since it resembles multi-tenancy until a query omits its tenant predicate.
 
-In response, Row-Level Security is enabled on every table and tenant-scoped policies govern access through the browser client, where the role holds read access only. Application queries are issued through a dedicated non-owner role and carry an explicit institution predicate, which is the property that requires review. A test asserts that the subjects of two institutions partition the table exactly, that writes to curriculum tables are refused, and that anonymous reads are refused.
+In response, Row-Level Security is enabled on every table and tenant-scoped policies govern access through the browser client, where the role holds read access only. Application queries are issued through a dedicated non-owner role and carry an explicit institution predicate, which is the property that requires review. The test places the two seeded institutions side by side and requires that each sees a non-empty set of subjects and that the two sets sum to the table exactly, so a leak and a correct policy cannot produce the same result. Three write attempts are asserted as failures: an update to a curriculum row, an insertion into the enrolment table, and any read by an anonymous role. All four probes return the expected outcome against the deployed database.
 
 \section{Summary of Research Gaps}
 
