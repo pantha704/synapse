@@ -20,7 +20,7 @@ export function AnnouncementsPanel({ items, canPost, batchId, dark = false }: Pr
 
   const surface = dark ? "bg-white/[0.04] border-white/[0.06]" : "bg-gray-50 border-gray-200";
   const heading = dark ? "text-white/70" : "text-gray-900";
-  const muted = dark ? "text-white/40" : "text-gray-500";
+  const muted = dark ? "text-white/60" : "text-gray-500";
 
   const post = () => {
     if (!batchId) return;
@@ -54,14 +54,14 @@ export function AnnouncementsPanel({ items, canPost, batchId, dark = false }: Pr
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Title"
-            className="w-full rounded-lg border border-white/10 bg-transparent px-2.5 py-1.5 text-xs text-white placeholder:text-white/30"
+            className="w-full rounded-lg border border-white/10 bg-transparent px-2.5 py-1.5 text-xs text-white placeholder:text-white/55"
           />
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
             placeholder="Message to the batch"
             rows={2}
-            className="w-full rounded-lg border border-white/10 bg-transparent px-2.5 py-1.5 text-xs text-white placeholder:text-white/30"
+            className="w-full rounded-lg border border-white/10 bg-transparent px-2.5 py-1.5 text-xs text-white placeholder:text-white/55"
           />
           {error && <p className="text-[10px] text-red-400">{error}</p>}
           <button

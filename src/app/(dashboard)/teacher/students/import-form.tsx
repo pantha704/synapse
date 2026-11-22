@@ -17,13 +17,14 @@ export function ImportForm({ batches }: { batches: { id: string; name: string }[
   };
 
   if (batches.length === 0) {
-    return <p className="text-sm text-white/40">Create a batch first — imports attach students to a batch.</p>;
+    return <p className="text-sm text-white/60">Create a batch first — imports attach students to a batch.</p>;
   }
 
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-3">
         <select
+          aria-label="Batch to import students into"
           value={batchId}
           onChange={(e) => setBatchId(e.target.value)}
           className="rounded-lg border border-white/10 bg-[hsl(220,15%,10%)] px-3 py-2 text-sm text-white"
@@ -32,7 +33,7 @@ export function ImportForm({ batches }: { batches: { id: string; name: string }[
             <option key={b.id} value={b.id}>{b.name}</option>
           ))}
         </select>
-        <span className="self-center text-xs text-white/30">one student per line: name,email</span>
+        <span className="self-center text-xs text-white/55">one student per line: name,email</span>
       </div>
 
       <textarea
@@ -54,7 +55,7 @@ export function ImportForm({ batches }: { batches: { id: string; name: string }[
       {result && (
         <div className={`rounded-xl border p-3 text-xs ${result.ok ? "border-emerald-500/30 text-emerald-300" : "border-amber-500/30 text-amber-200"}`}>
           <p>{result.created} account(s) created · {result.enrolled} enrolled in the batch</p>
-          {result.skipped.length > 0 && <p className="mt-1 text-white/40">Skipped lines: {result.skipped.join(" | ")}</p>}
+          {result.skipped.length > 0 && <p className="mt-1 text-white/60">Skipped lines: {result.skipped.join(" | ")}</p>}
           {result.errors.map((e) => <p key={e} className="mt-1 text-red-300">{e}</p>)}
         </div>
       )}

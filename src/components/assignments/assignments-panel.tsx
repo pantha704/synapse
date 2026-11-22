@@ -25,9 +25,9 @@ export function AssignmentsPanel({ items, canSubmit, dark = false }: Props) {
 
   const surface = dark ? "bg-white/[0.04] border-white/[0.06]" : "bg-gray-50 border-gray-200";
   const heading = dark ? "text-white/70" : "text-gray-900";
-  const muted = dark ? "text-white/40" : "text-gray-500";
+  const muted = dark ? "text-white/60" : "text-gray-500";
   const input = dark
-    ? "border-white/10 bg-transparent text-white placeholder:text-white/30"
+    ? "border-white/10 bg-transparent text-white placeholder:text-white/55"
     : "border-gray-300 bg-white text-gray-900 placeholder:text-gray-400";
 
   const submit = (id: string) => {

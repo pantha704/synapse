@@ -19,7 +19,7 @@ export default async function AdminDashboard() {
     <div className="max-w-5xl mx-auto space-y-8">
       <div>
         <h1 className="text-2xl font-semibold text-white">Institution Overview</h1>
-        <p className="text-white/40 mt-1 text-sm">
+        <p className="text-white/60 mt-1 text-sm">
           {overview
             ? "Live counts from your institution's records."
             : "No institution linked to this account yet."}
@@ -32,7 +32,7 @@ export default async function AdminDashboard() {
             <CardContent className="p-5">
               <stat.icon className={`w-5 h-5 mb-3 ${stat.color}`} />
               <p className="text-2xl font-semibold text-white">{stat.value}</p>
-              <p className="text-xs text-white/40 mt-1">{stat.label}</p>
+              <p className="text-xs text-white/60 mt-1">{stat.label}</p>
             </CardContent>
           </Card>
         ))}
@@ -42,7 +42,7 @@ export default async function AdminDashboard() {
         <CardHeader className="pb-3">
           <CardTitle className="text-base text-white/80 font-medium">Where these numbers come from</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2 text-sm text-white/50">
+        <CardContent className="space-y-2 text-sm text-white/65">
           <p>Students, teachers and batches are counted from this institution&apos;s membership rows.</p>
           <p>Average completion is completed topic-progress rows over all topic-progress rows.</p>
         </CardContent>

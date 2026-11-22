@@ -83,6 +83,7 @@ export default function TeacherAnalyticsPage() {
           </div>
 
           <select
+            aria-label="Sort students by"
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
             className="bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"

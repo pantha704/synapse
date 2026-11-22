@@ -17,7 +17,7 @@ export default async function TeacherReportPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-white">Class progress report</h1>
-          <p className="text-white/40 mt-1 text-sm">
+          <p className="text-white/60 mt-1 text-sm">
             {batchName ? `${batchName} · ${rows.length} students` : "No batch assigned yet"}
           </p>
         </div>
@@ -55,7 +55,7 @@ export default async function TeacherReportPage() {
         </table>
       </section>
 
-      <p className="text-xs text-white/30 print:hidden">
+      <p className="text-xs text-white/55 print:hidden">
         Tip: use your browser&apos;s print dialog → &ldquo;Save as PDF&rdquo; to hand this in.
       </p>
     </div>

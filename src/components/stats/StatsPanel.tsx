@@ -13,7 +13,7 @@ interface BatchPulseProps {
 function BatchPulse({ activity, change, period, weeklyData }: BatchPulseProps) {
   return (
     <div>
-      <h4 className="text-[10px] uppercase tracking-widest text-white/40 mb-4 font-medium">
+      <h4 className="text-[10px] uppercase tracking-widest text-white/60 mb-4 font-medium">
         Batch Pulse
       </h4>
       <div className="bg-white/[0.04] rounded-xl p-4 border border-white/[0.06]">
@@ -32,7 +32,7 @@ function BatchPulse({ activity, change, period, weeklyData }: BatchPulseProps) {
             />
           ))}
         </div>
-        <p className="text-[10px] text-white/40 mt-4 leading-relaxed">
+        <p className="text-[10px] text-white/60 mt-4 leading-relaxed">
           System activity is peak. Class interaction levels are optimal for the current module.
         </p>
       </div>
@@ -47,7 +47,7 @@ interface CriticalNodesProps {
 function CriticalNodes({ nodes }: CriticalNodesProps) {
   return (
     <div>
-      <h4 className="text-[10px] uppercase tracking-widest text-white/40 mb-4 font-medium">
+      <h4 className="text-[10px] uppercase tracking-widest text-white/60 mb-4 font-medium">
         Critical Nodes
       </h4>
       <div className="space-y-3">
@@ -67,7 +67,7 @@ function CriticalNodes({ nodes }: CriticalNodesProps) {
             )}
             <div>
               <p className="text-xs font-bold text-white">{node.title}</p>
-              <p className="text-[10px] text-white/40">{node.description}</p>
+              <p className="text-[10px] text-white/60">{node.description}</p>
             </div>
           </div>
         ))}
@@ -79,7 +79,7 @@ function CriticalNodes({ nodes }: CriticalNodesProps) {
 function EngagementNebula() {
   return (
     <div>
-      <h4 className="text-[10px] uppercase tracking-widest text-white/40 mb-4 font-medium">
+      <h4 className="text-[10px] uppercase tracking-widest text-white/60 mb-4 font-medium">
         Engagement Nebula
       </h4>
       <div className="relative h-48 rounded-2xl overflow-hidden bg-gradient-to-br from-violet-900/40 to-cyan-900/20 border border-white/[0.06]">

@@ -40,7 +40,7 @@ export default async function TeacherStudentsPage() {
     <div className="max-w-4xl mx-auto space-y-8">
       <div>
         <h1 className="text-2xl font-semibold text-white">Students</h1>
-        <p className="text-white/40 mt-1 text-sm">
+        <p className="text-white/60 mt-1 text-sm">
           {roster.length} enrolled across {batches.length} batch{batches.length === 1 ? "" : "es"}.
         </p>
       </div>
@@ -52,7 +52,7 @@ export default async function TeacherStudentsPage() {
 
       <section className="rounded-2xl border border-white/[0.06] bg-[hsl(220,15%,10%)]/60 overflow-hidden">
         <table className="w-full text-left text-sm">
-          <thead className="bg-white/[0.03] text-[11px] uppercase tracking-wider text-white/40">
+          <thead className="bg-white/[0.03] text-[11px] uppercase tracking-wider text-white/60">
             <tr>
               <th className="px-4 py-3 font-medium">Student</th>
               <th className="px-4 py-3 font-medium">Email</th>
@@ -63,7 +63,7 @@ export default async function TeacherStudentsPage() {
           <tbody>
             {roster.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-white/30">
+                <td colSpan={4} className="px-4 py-6 text-center text-white/55">
                   No students yet — paste a CSV above or share a join code.
                 </td>
               </tr>
@@ -71,9 +71,9 @@ export default async function TeacherStudentsPage() {
               roster.map((r) => (
                 <tr key={`${r.id}-${r.batch}`} className="border-t border-white/[0.04]">
                   <td className="px-4 py-3 text-white/80">{r.name}</td>
-                  <td className="px-4 py-3 text-white/50">{r.email}</td>
-                  <td className="px-4 py-3 text-white/50">{r.batch}</td>
-                  <td className="px-4 py-3 text-white/40">{r.joinedAt}</td>
+                  <td className="px-4 py-3 text-white/65">{r.email}</td>
+                  <td className="px-4 py-3 text-white/65">{r.batch}</td>
+                  <td className="px-4 py-3 text-white/60">{r.joinedAt}</td>
                 </tr>
               ))
             )}

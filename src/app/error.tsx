@@ -60,7 +60,7 @@ export default function ErrorPage({
           </div>
 
           <h2 className="text-xl font-bold text-white mb-2">{title}</h2>
-          <p className="text-sm text-white/50 mb-6">{message}</p>
+          <p className="text-sm text-white/65 mb-6">{message}</p>
 
           <button
             onClick={() => router.push('/login')}

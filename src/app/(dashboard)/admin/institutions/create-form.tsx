@@ -11,7 +11,7 @@ export function CreateInstitutionForm({ enabled }: { enabled: boolean }) {
 
   if (!enabled) {
     return (
-      <p className="text-sm text-white/40">
+      <p className="text-sm text-white/60">
         Only a platform operator can create institutions. An institution admin manages its own tenant.
       </p>
     );
@@ -35,13 +35,13 @@ export function CreateInstitutionForm({ enabled }: { enabled: boolean }) {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Institution name"
-          className="rounded-lg border border-white/10 bg-transparent px-3 py-2 text-sm text-white placeholder:text-white/30"
+          className="rounded-lg border border-white/10 bg-transparent px-3 py-2 text-sm text-white placeholder:text-white/55"
         />
         <input
           value={slug}
           onChange={(e) => setSlug(e.target.value)}
           placeholder="slug (e.g. snu-kolkata)"
-          className="rounded-lg border border-white/10 bg-transparent px-3 py-2 text-sm text-white placeholder:text-white/30"
+          className="rounded-lg border border-white/10 bg-transparent px-3 py-2 text-sm text-white placeholder:text-white/55"
         />
       </div>
       <button

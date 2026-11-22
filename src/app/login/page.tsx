@@ -135,7 +135,7 @@ export default function LoginPage() {
                         className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${
                           role === r
                             ? "bg-violet-500/20 text-violet-300 border border-violet-500/30"
-                            : "bg-white/[0.04] text-white/40 border border-white/[0.06] hover:bg-white/[0.08]"
+                            : "bg-white/[0.04] text-white/60 border border-white/[0.06] hover:bg-white/[0.08]"
                         }`}
                       >
                         {r === "student" ? "🎓 Student" : "👨‍🏫 Teacher"}
@@ -162,7 +162,7 @@ export default function LoginPage() {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       required
-                      className="bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/30 h-11"
+                      className="bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/55 h-11"
                     />
                   </motion.div>
                 )}
@@ -174,7 +174,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/30 h-11"
+                className="bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/55 h-11"
               />
 
               <div className="relative">
@@ -185,12 +185,13 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/30 h-11 pr-10"
+                  className="bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/55 h-11 pr-10"
                 />
                 <button
                   type="button"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/60 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white/60 transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -214,7 +215,7 @@ export default function LoginPage() {
                       onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
                       required
                       maxLength={6}
-                      className="bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/30 h-11 uppercase tracking-widest text-center font-mono"
+                      className="bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/55 h-11 uppercase tracking-widest text-center font-mono"
                     />
                   </motion.div>
                 )}

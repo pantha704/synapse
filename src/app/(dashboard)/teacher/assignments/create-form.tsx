@@ -19,7 +19,7 @@ export function CreateAssignmentForm({ batches }: Props) {
   const topics = batches.find((b) => b.id === batchId)?.topics ?? [];
 
   if (batches.length === 0) {
-    return <p className="text-sm text-white/40">Create a batch with topics first.</p>;
+    return <p className="text-sm text-white/60">Create a batch with topics first.</p>;
   }
 
   const submit = () => {
@@ -38,6 +38,7 @@ export function CreateAssignmentForm({ batches }: Props) {
     <div className="space-y-3">
       <div className="grid gap-2 sm:grid-cols-2">
         <select
+          aria-label="Batch"
           value={batchId}
           onChange={(e) => {
             setBatchId(e.target.value);
@@ -49,6 +50,7 @@ export function CreateAssignmentForm({ batches }: Props) {
           {batches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
         </select>
         <select
+          aria-label="Topic"
           value={topicId}
           onChange={(e) => setTopicId(e.target.value)}
           className="rounded-lg border border-white/10 bg-[hsl(220,15%,10%)] px-3 py-2 text-sm text-white"
@@ -62,14 +64,14 @@ export function CreateAssignmentForm({ batches }: Props) {
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder="Assignment title"
-        className="w-full rounded-lg border border-white/10 bg-transparent px-3 py-2 text-sm text-white placeholder:text-white/30"
+        className="w-full rounded-lg border border-white/10 bg-transparent px-3 py-2 text-sm text-white placeholder:text-white/55"
       />
       <textarea
         value={instructions}
         onChange={(e) => setInstructions(e.target.value)}
         rows={3}
         placeholder="Instructions (optional)"
-        className="w-full rounded-xl border border-white/10 bg-transparent p-3 text-sm text-white placeholder:text-white/30"
+        className="w-full rounded-xl border border-white/10 bg-transparent p-3 text-sm text-white placeholder:text-white/55"
       />
       <div className="flex items-center gap-3">
         <input

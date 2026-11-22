@@ -32,7 +32,7 @@ export type DashboardData = {
 const STATUS_CONFIG = {
   progressing: { label: "On track", color: "text-emerald-400", dot: "bg-emerald-400" },
   stuck: { label: "Needs attention", color: "text-amber-400", dot: "bg-amber-400" },
-  not_started: { label: "Not started", color: "text-white/30", dot: "bg-white/20" },
+  not_started: { label: "Not started", color: "text-white/55", dot: "bg-white/20" },
 };
 
 export default function StudentDashboardClient({ dataPromise }: { dataPromise: Promise<DashboardData> }) {
@@ -42,7 +42,7 @@ export default function StudentDashboardClient({ dataPromise }: { dataPromise: P
       {/* Header */}
       <motion.div {...fadeUp}>
         <h1 className="text-2xl font-semibold text-white">Your learning map 🧠</h1>
-        <p className="text-white/40 mt-1 text-sm">
+        <p className="text-white/60 mt-1 text-sm">
           Track your progress across all subjects.
         </p>
       </motion.div>
@@ -76,7 +76,7 @@ export default function StudentDashboardClient({ dataPromise }: { dataPromise: P
         <h2 className="text-base font-medium text-white/80 mb-4">Subjects</h2>
         <div className="space-y-3">
           {data.subjects.length === 0 ? (
-            <div className="text-white/40 text-sm py-8 text-center border border-white/[0.05] rounded-xl border-dashed">
+            <div className="text-white/60 text-sm py-8 text-center border border-white/[0.05] rounded-xl border-dashed">
               You are not enrolled in any subjects yet. Ask your teacher for a join code!
             </div>
           ) : data.subjects.map((subject, i) => {
@@ -114,11 +114,11 @@ export default function StudentDashboardClient({ dataPromise }: { dataPromise: P
                                 transition={{ delay: 0.4 + i * 0.08, duration: 0.6, ease: [0.23, 1, 0.32, 1] as [number, number, number, number] }}
                               />
                             </div>
-                            <span className="text-xs text-white/30 w-8 text-right">
+                            <span className="text-xs text-white/55 w-8 text-right">
                               {progress}%
                             </span>
                           </div>
-                          <p className="text-[11px] text-white/30 mt-1">
+                          <p className="text-[11px] text-white/55 mt-1">
                             {subject.completedTopics}/{subject.totalTopics} topics
                           </p>
                         </div>

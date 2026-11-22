@@ -101,7 +101,7 @@ function SidebarContent({
         </AnimatePresence>
         <button
           onClick={onToggle}
-          className="ml-auto text-white/30 hover:text-white/60 transition-colors hidden lg:block"
+          className="ml-auto text-white/55 hover:text-white/60 transition-colors hidden lg:block"
         >
           <ChevronLeft
             className={`w-4 h-4 transition-transform duration-200 ${
@@ -122,7 +122,7 @@ function SidebarContent({
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 group relative ${
                 active
                   ? "bg-violet-500/15 text-violet-300"
-                  : "text-white/50 hover:text-white/80 hover:bg-white/[0.04]"
+                  : "text-white/65 hover:text-white/80 hover:bg-white/[0.04]"
               }`}
             >
               {active && (
@@ -171,7 +171,7 @@ function SidebarContent({
                 <p className="text-sm font-medium text-white/80 truncate">
                   {user.name}
                 </p>
-                <p className="text-xs text-white/30 truncate">{user.role}</p>
+                <p className="text-xs text-white/55 truncate">{user.role}</p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -179,7 +179,7 @@ function SidebarContent({
         <Button
           variant="ghost"
           onClick={handleLogout}
-          className={`w-full text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors ${
+          className={`w-full text-white/60 hover:text-red-400 hover:bg-red-500/10 transition-colors ${
             collapsed ? "justify-center px-0" : "justify-start"
           }`}
           size="sm"
@@ -220,8 +220,8 @@ export function DashboardShell({
       <div className="flex flex-col flex-1 min-w-0">
         <header className="lg:hidden flex items-center gap-3 px-4 h-14 border-b border-white/[0.06] bg-[hsl(220,15%,8%)]">
           <Sheet>
-            <SheetTrigger render={
-              <Button variant="ghost" size="icon" className="text-white/50">
+            <SheetTrigger aria-label="Open navigation" render={
+              <Button variant="ghost" size="icon" className="text-white/65">
                 <Menu className="w-5 h-5" />
               </Button>
             } />

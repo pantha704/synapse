@@ -42,7 +42,7 @@ export default function TeacherDashboardClient({ dataPromise }: { dataPromise: P
       {/* Header */}
       <motion.div {...fadeUp}>
         <h1 className="text-2xl font-semibold text-white">Good morning, {data.teacherName} 👋</h1>
-        <p className="text-white/40 mt-1 text-sm">
+        <p className="text-white/60 mt-1 text-sm">
           Here&apos;s what&apos;s happening across your classes today.
         </p>
       </motion.div>
@@ -63,7 +63,7 @@ export default function TeacherDashboardClient({ dataPromise }: { dataPromise: P
                 </div>
                 <div>
                   <p className="text-2xl font-semibold text-white">{stat.value}</p>
-                  <p className="text-xs text-white/40 mt-0.5">{stat.label}</p>
+                  <p className="text-xs text-white/60 mt-0.5">{stat.label}</p>
                 </div>
               </CardContent>
             </Card>
@@ -78,7 +78,7 @@ export default function TeacherDashboardClient({ dataPromise }: { dataPromise: P
           <Button
             size="sm"
             variant="outline"
-            className="border-white/[0.08] text-white/50 hover:text-white hover:bg-white/[0.04] gap-1.5"
+            className="border-white/[0.08] text-white/65 hover:text-white hover:bg-white/[0.04] gap-1.5"
           >
             <Plus className="w-3.5 h-3.5" />
             New Batch
@@ -87,7 +87,7 @@ export default function TeacherDashboardClient({ dataPromise }: { dataPromise: P
 
         <div className="space-y-3">
           {data.batches.length === 0 ? (
-            <div className="text-white/40 text-sm py-8 text-center border border-white/[0.05] rounded-xl border-dashed">
+            <div className="text-white/60 text-sm py-8 text-center border border-white/[0.05] rounded-xl border-dashed">
               No batches yet. Create your first batch to add students!
             </div>
           ) : data.batches.map((batch, i) => (
@@ -104,12 +104,12 @@ export default function TeacherDashboardClient({ dataPromise }: { dataPromise: P
                       <p className="font-medium text-white/90">{batch.name}</p>
                       <Badge
                         variant="outline"
-                        className="border-white/[0.08] text-white/30 font-mono text-[10px] px-1.5"
+                        className="border-white/[0.08] text-white/55 font-mono text-[10px] px-1.5"
                       >
                         {batch.joinCode}
                       </Badge>
                     </div>
-                    <p className="text-xs text-white/40 mt-0.5">
+                    <p className="text-xs text-white/60 mt-0.5">
                       {batch._count.students} students · {batch._count.subjects} subjects
                     </p>
                   </div>

@@ -26,7 +26,7 @@ export function TeacherPathView({ nodes, batchPulse, criticalNodes, announcement
           <div className="flex-1 flex items-center justify-center p-10">
             <div className="max-w-sm text-center space-y-2">
               <h2 className="text-lg font-semibold text-white">No batch assigned yet</h2>
-              <p className="text-sm text-white/50">
+              <p className="text-sm text-white/65">
                 Create a batch and attach a subject with topics, then this path fills in automatically.
               </p>
             </div>
