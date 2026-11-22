@@ -101,7 +101,9 @@ function SidebarContent({
         </AnimatePresence>
         <button
           onClick={onToggle}
-          className="ml-auto text-white/55 hover:text-white/60 transition-colors hidden lg:block"
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-expanded={!collapsed}
+          className="ml-auto hidden size-11 place-items-center rounded-md text-white/55 transition-colors hover:bg-white/[0.06] hover:text-white lg:grid"
         >
           <ChevronLeft
             className={`w-4 h-4 transition-transform duration-200 ${
