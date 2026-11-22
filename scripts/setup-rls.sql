@@ -1,224 +1,200 @@
--- Supabase Row Level Security (RLS) Policies
--- Run this in your Supabase SQL Editor
--- Generated: 2026-04-04
+-- Synapse — Row Level Security (tenant-scoped)
+-- Run in the Supabase SQL editor, or: psql "$DATABASE_URL" -f scripts/setup-rls.sql
+--
+-- IMPORTANT: RLS only applies to roles that are NOT the table owner.
+-- Supabase's `postgres` role (and any direct DATABASE_URL connection as owner)
+-- bypasses every policy below. To make these policies real, the app must reach
+-- the data through PostgREST/supabase-js as `authenticated`, or through a
+-- dedicated non-owner login role. Otherwise isolation stays application-level.
+--
+-- Two id types exist in this schema and the old policy file conflated them:
+--   users.supabase_id = the Supabase auth uuid (what auth.uid() returns)
+--   users.id          = the app's cuid (what student_id / teacher_id store)
+--
+-- Generated: 2026-11-20 (replaces the permissive USING (true) policies)
 
--- Enable RLS on all tables
-ALTER TABLE institutions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE batches ENABLE ROW LEVEL SECURITY;
-ALTER TABLE batch_students ENABLE ROW LEVEL SECURITY;
-ALTER TABLE subjects ENABLE ROW LEVEL SECURITY;
-ALTER TABLE batch_subjects ENABLE ROW LEVEL SECURITY;
-ALTER TABLE topic_nodes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE resources ENABLE ROW LEVEL SECURITY;
-ALTER TABLE student_progress ENABLE ROW LEVEL SECURITY;
-ALTER TABLE teacher_progress ENABLE ROW LEVEL SECURITY;
-ALTER TABLE student_resource_progress ENABLE ROW LEVEL SECURITY;
-ALTER TABLE engagement_events ENABLE ROW LEVEL SECURITY;
-ALTER TABLE ai_sessions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE ai_messages ENABLE ROW LEVEL SECURITY;
-ALTER TABLE document_chunks ENABLE ROW LEVEL SECURITY;
+-- ─── Tenant + app-user resolution ─────────────────────────────────────
+create or replace function public.current_institution_id()
+returns text
+language sql stable security definer set search_path = public
+as $$
+  select institution_id from users where supabase_id = auth.uid() limit 1;
+$$;
 
--- ─── Institutions ──────────────────────────────────────
--- Anyone can read institutions (needed for join flow)
-CREATE POLICY "Anyone can view institutions"
-  ON institutions FOR SELECT
-  TO authenticated
-  USING (true);
+create or replace function public.current_user_id()
+returns text
+language sql stable security definer set search_path = public
+as $$
+  select id from users where supabase_id = auth.uid() limit 1;
+$$;
 
--- ─── Users ─────────────────────────────────────────────
--- Users can read their own profile
-CREATE POLICY "Users can view own profile"
-  ON users FOR SELECT
-  TO authenticated
-  USING (auth.uid() = supabase_id);
+revoke all on function public.current_institution_id() from anon;
+revoke all on function public.current_user_id() from anon;
+grant execute on function public.current_institution_id() to authenticated;
+grant execute on function public.current_user_id() to authenticated;
 
--- Users can update their own profile
-CREATE POLICY "Users can update own profile"
-  ON users FOR UPDATE
-  TO authenticated
-  USING (auth.uid() = supabase_id)
-  WITH CHECK (auth.uid() = supabase_id);
+-- ─── Enable RLS everywhere ────────────────────────────────────────────
+alter table institutions              enable row level security;
+alter table users                     enable row level security;
+alter table batches                   enable row level security;
+alter table batch_students            enable row level security;
+alter table subjects                  enable row level security;
+alter table batch_subjects            enable row level security;
+alter table topic_nodes               enable row level security;
+alter table resources                 enable row level security;
+alter table student_progress          enable row level security;
+alter table teacher_progress          enable row level security;
+alter table student_resource_progress enable row level security;
+alter table engagement_events         enable row level security;
+alter table ai_sessions               enable row level security;
+alter table ai_messages               enable row level security;
+alter table document_chunks           enable row level security;
 
--- ─── Batches ───────────────────────────────────────────
--- Anyone can read batches (needed for join flow)
-CREATE POLICY "Anyone can view batches"
-  ON batches FOR SELECT
-  TO authenticated
-  USING (true);
+-- ─── Drop previous policies so this file is re-runnable ───────────────
+do $$
+declare p record;
+begin
+  for p in
+    select schemaname, tablename, policyname from pg_policies
+    where schemaname = 'public'
+      and tablename in ('institutions','users','batches','batch_students','subjects',
+                        'batch_subjects','topic_nodes','resources','student_progress',
+                        'teacher_progress','student_resource_progress','engagement_events',
+                        'ai_sessions','ai_messages','document_chunks')
+  loop
+    execute format('drop policy if exists %I on %I.%I', p.policyname, p.schemaname, p.tablename);
+  end loop;
+end $$;
 
--- Teachers can insert batches they own
-CREATE POLICY "Teachers can create own batches"
-  ON batches FOR INSERT
-  TO authenticated
-  WITH CHECK (
-    auth.uid() = teacher_id AND
-    EXISTS (
-      SELECT 1 FROM users
-      WHERE users.supabase_id = auth.uid() AND users.role = 'TEACHER'
-    )
-  );
+-- ─── Institution ──────────────────────────────────────────────────────
+create policy institution_read on institutions for select to authenticated
+  using (id = public.current_institution_id());
 
--- ─── Batch Students ────────────────────────────────────
--- Students can view batch enrollments
-CREATE POLICY "Anyone can view batch students"
-  ON batch_students FOR SELECT
-  TO authenticated
-  USING (true);
+create policy institution_admin_update on institutions for update to authenticated
+  using (id = public.current_institution_id()
+         and exists (select 1 from users u where u.supabase_id = auth.uid() and u.role = 'ADMIN'))
+  with check (id = public.current_institution_id());
 
--- Students can join batches
-CREATE POLICY "Students can join batches"
-  ON batch_students FOR INSERT
-  TO authenticated
-  WITH CHECK (
-    auth.uid() = student_id AND
-    EXISTS (
-      SELECT 1 FROM users
-      WHERE users.supabase_id = auth.uid() AND users.role = 'STUDENT'
-    )
-  );
+-- ─── Users ────────────────────────────────────────────────────────────
+create policy users_read on users for select to authenticated
+  using (institution_id = public.current_institution_id());
 
--- ─── Subjects ──────────────────────────────────────────
--- Anyone can view subjects
-CREATE POLICY "Anyone can view subjects"
-  ON subjects FOR SELECT
-  TO authenticated
-  USING (true);
+create policy users_self_update on users for update to authenticated
+  using (supabase_id = auth.uid()) with check (supabase_id = auth.uid());
 
--- ─── Topic Nodes ───────────────────────────────────────
--- Anyone can view topics
-CREATE POLICY "Anyone can view topics"
-  ON topic_nodes FOR SELECT
-  TO authenticated
-  USING (true);
+-- ─── Batches ──────────────────────────────────────────────────────────
+create policy batches_read on batches for select to authenticated
+  using (institution_id = public.current_institution_id());
 
--- ─── Resources ─────────────────────────────────────────
--- Anyone can view resources
-CREATE POLICY "Anyone can view resources"
-  ON resources FOR SELECT
-  TO authenticated
-  USING (true);
+create policy batches_teacher_write on batches for all to authenticated
+  using (institution_id = public.current_institution_id() and teacher_id = public.current_user_id())
+  with check (institution_id = public.current_institution_id() and teacher_id = public.current_user_id());
 
--- ─── Student Progress ──────────────────────────────────
--- Students can view and update their own progress
-CREATE POLICY "Students can view own progress"
-  ON student_progress FOR SELECT
-  TO authenticated
-  USING (
-    auth.uid() = student_id
-  );
+-- ─── Batch students ───────────────────────────────────────────────────
+create policy batch_students_read on batch_students for select to authenticated
+  using (exists (select 1 from batches b
+                 where b.id = batch_students.batch_id
+                   and b.institution_id = public.current_institution_id()));
 
-CREATE POLICY "Students can update own progress"
-  ON student_progress FOR ALL
-  TO authenticated
-  USING (
-    auth.uid() = student_id
-  )
-  WITH CHECK (
-    auth.uid() = student_id
-  );
+create policy batch_students_self_insert on batch_students for insert to authenticated
+  with check (student_id = public.current_user_id());
 
--- ─── Teacher Progress ──────────────────────────────────
--- Teachers can view progress for their batches
-CREATE POLICY "Teachers can view batch progress"
-  ON teacher_progress FOR SELECT
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM batches
-      WHERE batches.id = teacher_progress.batch_id
-      AND batches.teacher_id = auth.uid()
-    )
-  );
+-- ─── Subjects ─────────────────────────────────────────────────────────
+create policy subjects_read on subjects for select to authenticated
+  using (institution_id = public.current_institution_id());
 
-CREATE POLICY "Teachers can assign progress"
-  ON teacher_progress FOR ALL
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM batches
-      WHERE batches.id = teacher_progress.batch_id
-      AND batches.teacher_id = auth.uid()
-    )
-  )
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM batches
-      WHERE batches.id = teacher_progress.batch_id
-      AND batches.teacher_id = auth.uid()
-    )
-  );
+create policy subjects_write on subjects for all to authenticated
+  using (institution_id = public.current_institution_id())
+  with check (institution_id = public.current_institution_id());
 
--- ─── Student Resource Progress ─────────────────────────
--- Students can manage their own resource progress
-CREATE POLICY "Students can view own resource progress"
-  ON student_resource_progress FOR SELECT
-  TO authenticated
-  USING (auth.uid() = student_id);
+create policy batch_subjects_read on batch_subjects for select to authenticated
+  using (exists (select 1 from subjects s
+                 where s.id = batch_subjects.subject_id
+                   and s.institution_id = public.current_institution_id()));
 
-CREATE POLICY "Students can update own resource progress"
-  ON student_resource_progress FOR ALL
-  TO authenticated
-  USING (auth.uid() = student_id)
-  WITH CHECK (auth.uid() = student_id);
+-- ─── Topic nodes / resources / chunks (scoped through the subject) ────
+create policy topic_nodes_read on topic_nodes for select to authenticated
+  using (exists (select 1 from subjects s
+                 where s.id = topic_nodes.subject_id
+                   and s.institution_id = public.current_institution_id()));
 
--- ─── Engagement Events ─────────────────────────────────
--- Students can insert their own events
-CREATE POLICY "Students can log own events"
-  ON engagement_events FOR INSERT
-  TO authenticated
-  WITH CHECK (auth.uid() = student_id);
+create policy topic_nodes_write on topic_nodes for all to authenticated
+  using (exists (select 1 from subjects s
+                 where s.id = topic_nodes.subject_id
+                   and s.institution_id = public.current_institution_id()))
+  with check (exists (select 1 from subjects s
+                 where s.id = topic_nodes.subject_id
+                   and s.institution_id = public.current_institution_id()));
 
--- Students can view own events
-CREATE POLICY "Students can view own events"
-  ON engagement_events FOR SELECT
-  TO authenticated
-  USING (auth.uid() = student_id);
+create policy resources_read on resources for select to authenticated
+  using (exists (select 1 from subjects s
+                 where s.id = resources.subject_id
+                   and s.institution_id = public.current_institution_id()));
 
--- ─── AI Sessions ───────────────────────────────────────
--- Students can manage their own AI sessions
-CREATE POLICY "Students can view own AI sessions"
-  ON ai_sessions FOR SELECT
-  TO authenticated
-  USING (auth.uid() = student_id);
+create policy resources_write on resources for all to authenticated
+  using (exists (select 1 from subjects s
+                 where s.id = resources.subject_id
+                   and s.institution_id = public.current_institution_id()))
+  with check (exists (select 1 from subjects s
+                 where s.id = resources.subject_id
+                   and s.institution_id = public.current_institution_id()));
 
-CREATE POLICY "Students can create own AI sessions"
-  ON ai_sessions FOR INSERT
-  TO authenticated
-  WITH CHECK (auth.uid() = student_id);
+create policy document_chunks_read on document_chunks for select to authenticated
+  using (exists (select 1 from subjects s
+                 where s.id = document_chunks.subject_id
+                   and s.institution_id = public.current_institution_id()));
 
-CREATE POLICY "Students can delete own AI sessions"
-  ON ai_sessions FOR DELETE
-  TO authenticated
-  USING (auth.uid() = student_id);
+-- ─── Personal progress (own rows only) ────────────────────────────────
+create policy student_progress_own on student_progress for all to authenticated
+  using (student_id = public.current_user_id())
+  with check (student_id = public.current_user_id());
 
--- ─── AI Messages ───────────────────────────────────────
--- Students can view messages from their sessions
-CREATE POLICY "Students can view own AI messages"
-  ON ai_messages FOR SELECT
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM ai_sessions
-      WHERE ai_sessions.id = ai_messages.session_id
-      AND ai_sessions.student_id = auth.uid()
-    )
-  );
+create policy student_resource_progress_own on student_resource_progress for all to authenticated
+  using (student_id = public.current_user_id())
+  with check (student_id = public.current_user_id());
 
-CREATE POLICY "Students can insert own AI messages"
-  ON ai_messages FOR INSERT
-  TO authenticated
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM ai_sessions
-      WHERE ai_sessions.id = ai_messages.session_id
-      AND ai_sessions.student_id = auth.uid()
-    )
-  );
+-- ─── Teacher progress (own batches only) ──────────────────────────────
+create policy teacher_progress_own_batches on teacher_progress for all to authenticated
+  using (exists (select 1 from batches b
+                 where b.id = teacher_progress.batch_id and b.teacher_id = public.current_user_id()))
+  with check (exists (select 1 from batches b
+                 where b.id = teacher_progress.batch_id and b.teacher_id = public.current_user_id()));
 
--- ─── Document Chunks ───────────────────────────────────
--- Anyone in the institution can view document chunks
-CREATE POLICY "Anyone can view document chunks"
-  ON document_chunks FOR SELECT
-  TO authenticated
-  USING (true);
+-- ─── Engagement events ────────────────────────────────────────────────
+create policy engagement_insert_own on engagement_events for insert to authenticated
+  with check (student_id = public.current_user_id());
+
+create policy engagement_read_own on engagement_events for select to authenticated
+  using (student_id = public.current_user_id()
+         or exists (select 1 from batches b
+                    join batch_students bs on bs.batch_id = b.id
+                    where bs.student_id = engagement_events.student_id
+                      and b.teacher_id = public.current_user_id()));
+
+-- ─── AI sessions / messages ───────────────────────────────────────────
+create policy ai_sessions_own on ai_sessions for all to authenticated
+  using (student_id = public.current_user_id())
+  with check (student_id = public.current_user_id());
+
+create policy ai_messages_read on ai_messages for select to authenticated
+  using (exists (select 1 from ai_sessions s
+                 where s.id = ai_messages.session_id and s.student_id = public.current_user_id()));
+
+create policy ai_messages_insert on ai_messages for insert to authenticated
+  with check (exists (select 1 from ai_sessions s
+                 where s.id = ai_messages.session_id and s.student_id = public.current_user_id()));
+
+-- ─── Join by code (the one legitimate cross-tenant read) ──────────────
+-- Batches are no longer world-readable; joining goes through this RPC.
+create or replace function public.join_batch_by_code(code text)
+returns table (batch_id text, batch_name text, institution_id text)
+language sql stable security definer set search_path = public
+as $$
+  select b.id, b.name, b.institution_id
+  from batches b
+  where b.join_code = upper(trim(code))
+  limit 1;
+$$;
+
+revoke all on function public.join_batch_by_code(text) from anon;
+grant execute on function public.join_batch_by_code(text) to authenticated;

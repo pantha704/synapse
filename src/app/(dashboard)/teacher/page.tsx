@@ -3,6 +3,9 @@ import { prisma } from "@/lib/prisma";
 import TeacherDashboardClient, { DashboardData } from "./teacher-dashboard-client";
 import { createClient } from "@/utils/supabase/server";
 
+// DB-backed page: never prerender at build time
+export const dynamic = "force-dynamic";
+
 async function getDashboardData(): Promise<DashboardData> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

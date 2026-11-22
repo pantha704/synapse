@@ -65,7 +65,7 @@ export async function syncUserAction(
   }
 
   try {
-    let existingUser = await prisma.user.findUnique({
+    const existingUser = await prisma.user.findUnique({
       where: { supabaseId }
     });
 

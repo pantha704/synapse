@@ -5,6 +5,19 @@ Synapse (formerly MindMapClass) is a multi-tenant academic progress platform tha
 ## 🌟 Core Value
 Students and teachers can view their entire curriculum journey as a living, interactive mindmap—making academic progress tangible, visual, and engaging, similar to unlocking a skill tree in a game!
 
+## ⚙️ Local Setup
+
+```bash
+cp .env.example .env.local     # fill Supabase + Groq values
+npm install                    # runs prisma generate
+npm run db:push                # create tables
+psql "$DATABASE_URL" -f scripts/setup-rls.sql   # row-level security
+npm run seed                   # demo tenant (optional)
+npm run dev
+```
+
+Checks: `npm run typecheck` · `npm run lint` · `npm run build` (all run in CI).
+
 ## 🚀 Key Features (In Development)
 
 - **Multi-tenant Architecture:** Completely isolated workspaces for distinct schools or institutions.
@@ -17,13 +30,13 @@ Students and teachers can view their entire curriculum journey as a living, inte
 
 ## 🛠 Tech Stack
 
-- **Framework:** Next.js 15 (App Router, Turbopack)
+- **Framework:** Next.js 16 (App Router, Turbopack)
 - **Database & ORM:** PostgreSQL + Prisma
 - **Authentication:** Supabase Auth (SSR)
 - **UI & Styling:** Tailwind CSS v4, Framer Motion, Shadcn UI
 - **State Management:** Zustand
 - **Canvas / Mindmap:** React Flow (or D3.js)
-- **AI Backend:** Groq & NVIDIA NIM
+- **AI Backend:** Groq (`llama-3.3-70b-versatile` chat, `nvidia/nv-embedqa-e5-v5` embeddings, 1024-dim)
 
 ## 🏗️ Architecture & End-to-End Flow
 

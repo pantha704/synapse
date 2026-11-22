@@ -1,7 +1,11 @@
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+
+// Prisma 7 no longer ships the Rust query engine — the client needs a driver adapter.
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 
 const prismaClientSingleton = () => {
-  return new PrismaClient();
+  return new PrismaClient({ adapter });
 };
 
 declare const globalThis: {

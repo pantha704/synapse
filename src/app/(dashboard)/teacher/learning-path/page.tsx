@@ -6,6 +6,9 @@ import { LearningPath } from "@/components/path/LearningPath";
 import { StatsPanel } from "@/components/stats/StatsPanel";
 import { learningNodes, criticalNodes, batchPulse } from "@/data/mockData";
 
+// DB-backed page: never prerender at build time
+export const dynamic = "force-dynamic";
+
 export default function LearningPathPage() {
   return (
     <div className="min-h-screen bg-[#0e0e0e]">

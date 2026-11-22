@@ -22,9 +22,6 @@ import { Button } from '@/components/ui/button';
 import { Save, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-type CustomNodeData = TopicNodeData | { title?: string };
-type CustomNode = Node<CustomNodeData>;
-
 const nodeTypes: NodeTypes = {
   topic: TopicNode,
   chapter: ChapterNode,
@@ -81,11 +78,10 @@ export function MindmapCanvas({
   };
 
   const handleNodeClick = useCallback(
-    (_: React.MouseEvent, node: CustomNode) => {
+    (_: React.MouseEvent, node: Node) => {
       if (node.type === 'chapter') return;
-
       if (onNodeSelect) {
-        const title = 'title' in node.data ? node.data.title : undefined;
+        const title = (node.data as Partial<TopicNodeData> | undefined)?.title;
         onNodeSelect(node.id, title || 'Unknown Topic');
       }
     },

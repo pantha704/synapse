@@ -1,7 +1,7 @@
 import Groq from "groq-sdk";
 
 const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY || process.env.NEXT_PUBLIC_GROQ_API_KEY || "",
+  apiKey: process.env.GROQ_API_KEY || process.env.GROQ_API_KEY || "",
 });
 
 // NVIDIA NV-EmbedQA-E5-v5 via Groq — 1024-dim embeddings
@@ -14,7 +14,7 @@ export interface EmbeddingResult {
 }
 
 export async function createEmbedding(text: string): Promise<EmbeddingResult> {
-  if (!process.env.GROQ_API_KEY && !process.env.NEXT_PUBLIC_GROQ_API_KEY) {
+  if (!process.env.GROQ_API_KEY && !process.env.GROQ_API_KEY) {
     throw new Error("GROQ_API_KEY not configured");
   }
 

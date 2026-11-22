@@ -90,7 +90,7 @@ export function AIChatPanel({ subjectId, supabaseUserId, isOpen, onClose }: AICh
               <div className="text-center py-8">
                 <BookOpen className="w-8 h-8 text-gray-300 mx-auto mb-3" />
                 <p className="text-sm text-gray-500">Ask me anything about this subject</p>
-                <p className="text-xs text-gray-400 mt-1">I'll use course materials to answer</p>
+                <p className="text-xs text-gray-400 mt-1">I&apos;ll use course materials to answer</p>
               </div>
             )}
 

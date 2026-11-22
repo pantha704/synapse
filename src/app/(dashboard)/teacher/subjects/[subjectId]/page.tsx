@@ -5,6 +5,9 @@ import { MindmapClient } from './mindmap-client';
 import { TopicNodeData } from '@/components/canvas/topic-node';
 import { ChapterNodeData } from '@/components/canvas/chapter-node';
 
+// DB-backed page: never prerender at build time
+export const dynamic = "force-dynamic";
+
 export default async function TeacherSubjectMindmapPage({
   params
 }: {
