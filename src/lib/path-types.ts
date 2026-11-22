@@ -46,6 +46,9 @@ export interface StudentStats {
   weeklyPerformance: number[];
   weeklyLabels: string[];
   recentActivity: StudentActivity[];
+  xp: number;
+  level: number;
+  badges: string[];
 }
 
 export interface AnnouncementItem {

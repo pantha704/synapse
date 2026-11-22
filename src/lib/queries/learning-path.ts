@@ -30,7 +30,22 @@ const emptyStats = (name: string, title: string): StudentStats => ({
   weeklyPerformance: [0, 0, 0, 0, 0],
   weeklyLabels: ["MON", "TUE", "WED", "THU", "FRI"],
   recentActivity: [],
+  xp: 0,
+  level: 1,
+  badges: [],
 });
+
+// XP and badges are derived, not stored: 10 XP per completed topic, a level every
+// 100 XP, and a badge at the 1st, 5th and every 10th completion after that.
+const GAMIFICATION = (completed: number) => {
+  const xp = completed * 10;
+  const badges: string[] = [];
+  if (completed >= 1) badges.push("First Steps");
+  if (completed >= 5) badges.push("Halfway");
+  if (completed >= 10) badges.push("Ten Topics");
+  if (completed >= 25) badges.push("Quarter Century");
+  return { xp, level: Math.floor(xp / 100) + 1, badges };
+};
 
 const toStatus = (s?: string): LearningStatus =>
   s === "COMPLETED" ? "completed" : s === "IN_PROGRESS" ? "in-progress" : "locked";
@@ -255,6 +270,7 @@ export async function getStudentPath(): Promise<{
     })),
     batchId: student.enrolledBatches[0]?.batchId ?? null,
     stats: {
+      ...GAMIFICATION(nodes.filter((n) => n.status === "completed").length),
       name: student.name ?? student.email.split("@")[0],
       title: student.enrolledBatches[0]?.batch.name ?? "No batch yet",
       weeklyPerformance: counts.map((c) => Math.round((c / max) * 100)),

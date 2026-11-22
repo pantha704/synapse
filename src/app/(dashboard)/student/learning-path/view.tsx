@@ -96,6 +96,26 @@ export function StudentPathView({ nodes, stats, peers, currentStudentId, announc
             )}
           </div>
 
+          <div className="rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 p-4 text-white">
+            <div className="flex items-end justify-between">
+              <div>
+                <p className="text-[9px] uppercase tracking-wider opacity-80">Level {stats.level}</p>
+                <p className="text-sm font-bold">{stats.xp} XP</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[9px] uppercase tracking-wider opacity-80">Next level</p>
+                <p className="text-sm font-bold">{100 - (stats.xp % 100)} XP</p>
+              </div>
+            </div>
+            {stats.badges.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1">
+                {stats.badges.map((b) => (
+                  <span key={b} className="rounded-full bg-white/20 px-2 py-0.5 text-[9px]">{b}</span>
+                ))}
+              </div>
+            )}
+          </div>
+
           <AnnouncementsPanel items={announcements} canPost={false} batchId={batchId} />
 
           <AssignmentsPanel items={assignments} canSubmit />
